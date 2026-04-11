@@ -1,0 +1,93 @@
+app:
+  name: "Evo Trade System"
+  version: "1.0.0"
+  environment: "development"
+
+database:
+  url: "sqlite:///data/evo_trade.db"
+  echo: false
+
+services:
+  # 策略层：策略生成、风控计算、信号生成
+  strategy:
+    host: "0.0.0.0"
+    port: 8001
+    workers: 1
+
+  # 编排层：策略注册、调度决策、仓位管理、资金分配
+  orchestrator:
+    host: "0.0.0.0"
+    port: 8002
+    workers: 1
+
+  # 执行层：订单执行、MT5对接、持仓查询、账户同步
+  execution:
+    host: "0.0.0.0"
+    port: 8003
+    workers: 1
+
+  # API层：Web界面、数据展示、操作控制
+  dashboard:
+    host: "0.0.0.0"
+    port: 8004
+    workers: 1
+
+mt5:
+  login: 5049130509
+  password: "-ySbKy4z"
+  server: "MetaQuotes-Demo"
+
+# 策略评估配置
+strategy_evaluation:
+  # 默认启用的评估方式
+  enabled_evaluators:
+    synthetic: true      # 合成数据评估（模拟数据）
+    historical: false    # 历史数据评估（真实历史数据）- 待实现
+    realtime: false      # 实时数据评估（纸面交易）- 待实现
+
+  # 加权平均配置（当全部三种评估都启用时的权重）
+  weights:
+    historical: 0.60     # 60% - 真实历史数据最可靠
+    synthetic: 0.20      # 20% - 模拟数据辅助参考
+    realtime: 0.20       # 20% - 实时数据防止短期噪声
+
+  # 双评估权重配置（当只启用两种评估时）
+  two_evaluator_weights:
+    # synthetic + historical
+    synthetic_historical:
+      historical: 0.75
+      synthetic: 0.25
+    # synthetic + realtime
+    synthetic_realtime:
+      synthetic: 0.60
+      realtime: 0.40
+    # historical + realtime
+    historical_realtime:
+      historical: 0.75
+      realtime: 0.25
+
+  # 评估参数
+  parameters:
+    initial_balance: 10000.0        # 初始资金
+    synthetic_bars: 3000            # 合成数据K线数量
+    historical_bars: 3000           # 历史数据K线数量
+    realtime_duration_minutes: 60   # 实时测试持续时间（分钟）
+    symbol: "EURUSD"                # 默认交易品种
+
+    # 🔮 未来扩展：多货币对支持
+    # symbols: ["EURUSD", "GBPUSD", "USDJPY"]  # 取消注释以启用多货币对回测
+    # symbol_configs:                           # 每个品种的特殊配置
+    #   EURUSD:
+    #     bars: 3000
+    #     spread: 0.0002
+    #   GBPUSD:
+    #     bars: 3000
+    #     spread: 0.0003
+    #   XAUUSD:
+    #     bars: 2000
+    #     spread: 0.0050
+
+logging:
+  level: "INFO"
+  format: "json"
+  file: "logs/app.log"

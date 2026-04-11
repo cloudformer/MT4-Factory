@@ -1,0 +1,30 @@
+/Users/frankzhang/repo-private/MT4-Factory/services/execution/main.py:32: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("startup")
+/Users/frankzhang/repo-private/MT4-Factory/services/execution/main.py:58: DeprecationWarning: 
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+        
+  @app.on_event("shutdown")
+INFO:     Started server process [58089]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+ERROR:    [Errno 48] error while attempting to bind on address ('0.0.0.0', 8003): [errno 48] address already in use
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+检测到 Darwin 系统，使用 Mock MT5（开发模式）
+✅ 数据库初始化完成
+[MockMT5] 初始化连接（模拟）
+[MockMT5] 登录账户（模拟）: 5049130509@MetaQuotes-Demo
+✅ MT5 连接成功: 5049130509@MetaQuotes-Demo
+   余额: 10000.0 USD
+📡 Execution Layer 启动
+🎧 信号监听器启动...
+[MockMT5] 关闭连接（模拟）
+Execution Layer 关闭

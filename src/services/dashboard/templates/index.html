@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evo Trade System - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+</head>
+<body class="bg-gray-900 text-gray-100">
+    <div x-data="dashboard()" x-init="init()">
+        <!-- Header -->
+        <header class="bg-gray-800 border-b border-gray-700 p-4">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-blue-400">Evo Trade System V1</h1>
+                <div class="flex gap-4">
+                    <button @click="generateStrategies()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">
+                        🔧 生成策略
+                    </button>
+                    <button @click="refresh()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">
+                        🔄 刷新数据
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="container mx-auto p-6">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                    <div class="text-gray-400 text-sm">策略总数</div>
+                    <div class="text-3xl font-bold text-blue-400" x-text="stats.total_strategies"></div>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                    <div class="text-gray-400 text-sm">活跃策略</div>
+                    <div class="text-3xl font-bold text-green-400" x-text="stats.active_strategies"></div>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                    <div class="text-gray-400 text-sm">信号总数</div>
+                    <div class="text-3xl font-bold text-yellow-400" x-text="stats.total_signals"></div>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                    <div class="text-gray-400 text-sm">交易总数</div>
+                    <div class="text-3xl font-bold text-purple-400" x-text="stats.total_trades"></div>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                    <div class="text-gray-400 text-sm">总盈亏</div>
+                    <div class="text-3xl font-bold"
+                         :class="stats.total_profit >= 0 ? 'text-green-400' : 'text-red-400'"
+                         x-text="stats.total_profit"></div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="mb-4 border-b border-gray-700">
+                <nav class="flex gap-4">
+                    <button @click="currentTab = 'strategies'"
+                            :class="currentTab === 'strategies' ? 'border-blue-400 text-blue-400' : 'border-transparent text-gray-400'"
+                            class="px-4 py-2 border-b-2 font-medium">
+                        策略列表
+                    </button>
+                    <button @click="currentTab = 'signals'"
+                            :class="currentTab === 'signals' ? 'border-blue-400 text-blue-400' : 'border-transparent text-gray-400'"
+                            class="px-4 py-2 border-b-2 font-medium">
+                        信号列表
+                    </button>
+                    <button @click="currentTab = 'trades'"
+                            :class="currentTab === 'trades' ? 'border-blue-400 text-blue-400' : 'border-transparent text-gray-400'"
+                            class="px-4 py-2 border-b-2 font-medium">
+                        交易记录
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Strategies Tab -->
+            <div x-show="currentTab === 'strategies'" class="space-y-4">
+                <template x-for="strategy in strategies" :key="strategy.id">
+                    <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                        <!-- Header -->
+                        <div class="mb-4">
+                            <div class="flex justify-between items-start gap-4">
+                                <!-- Left: Name & ID -->
+                                <div class="flex-shrink">
+                                    <h3 class="text-xl font-bold text-blue-400" x-text="strategy.name"></h3>
+                                    <p class="text-sm text-gray-400" x-text="strategy.id"></p>
+                                </div>
+
+                                <!-- Right: Badges & Energy Bar -->
+                                <div class="flex flex-col items-end gap-2 flex-shrink-0">
+                                    <!-- Badges Row -->
+                                    <div class="flex gap-2">
+                                        <span class="px-3 py-1 rounded text-sm font-medium"
+                                              :class="{
+                                                  'bg-green-900 text-green-400': strategy.status === 'active',
+                                                  'bg-yellow-900 text-yellow-400': strategy.status === 'candidate',
+                                                  'bg-gray-700 text-gray-400': strategy.status === 'archived'
+                                              }"
+                                              x-text="strategy.status"></span>
+                                        <!-- 风险类型标签 - 根据推荐度分数着色 -->
+                                        <span class="px-3 py-1 rounded text-sm font-medium"
+                                              x-show="strategy.performance?.risk_type"
+                                              :class="{
+                                                  'bg-green-900 text-green-400': strategy.performance?.recommendation_summary?.recommendation_score >= 80,
+                                                  'bg-blue-900 text-blue-400': strategy.performance?.recommendation_summary?.recommendation_score >= 65 && strategy.performance?.recommendation_summary?.recommendation_score < 80,
+                                                  'bg-yellow-900 text-yellow-400': strategy.performance?.recommendation_summary?.recommendation_score >= 50 && strategy.performance?.recommendation_summary?.recommendation_score < 65,
+                                                  'bg-red-900 text-red-400': strategy.performance?.recommendation_summary?.recommendation_score < 50,
+                                                  'bg-gray-700 text-gray-400': !strategy.performance?.recommendation_summary?.recommendation_score
+                                              }"
+                                              x-text="strategy.performance?.risk_type"></span>
+                                        <span class="px-2 py-1 bg-purple-900 text-purple-300 rounded text-xs font-medium"
+                                              x-show="strategy.performance?.backtested_symbol"
+                                              x-text="strategy.performance?.backtested_symbol"></span>
+                                    </div>
+
+                                    <!-- Energy Bar -->
+                                    <div x-show="strategy.performance?.recommendation_summary"
+                                         class="w-56">
+                                        <!-- Score Label -->
+                                        <div class="flex items-center justify-between mb-1.5">
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="text-lg" x-text="strategy.performance?.recommendation_summary?.recommendation_emoji"></span>
+                                                <span class="text-xs text-gray-400 font-medium">推荐度</span>
+                                            </div>
+                                            <span class="text-sm font-bold tracking-wide"
+                                                  :class="{
+                                                      'text-green-400': strategy.performance?.recommendation_summary?.recommendation_score >= 80,
+                                                      'text-blue-400': strategy.performance?.recommendation_summary?.recommendation_score >= 65,
+                                                      'text-yellow-400': strategy.performance?.recommendation_summary?.recommendation_score >= 50,
+                                                      'text-red-400': strategy.performance?.recommendation_summary?.recommendation_score < 50
+                                                  }"
+                                                  x-text="strategy.performance?.recommendation_summary?.recommendation_score + '分'"></span>
+                                        </div>
+                                        <!-- Progress Bar with Glow -->
+                                        <div class="relative w-full bg-gray-900 rounded-full h-3 border border-gray-700 overflow-hidden shadow-inner">
+                                            <div class="absolute inset-0 rounded-full"
+                                                 :class="{
+                                                     'bg-gradient-to-r from-green-600 via-green-500 to-green-400 shadow-lg shadow-green-500/50': strategy.performance?.recommendation_summary?.recommendation_score >= 80,
+                                                     'bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 shadow-lg shadow-blue-500/50': strategy.performance?.recommendation_summary?.recommendation_score >= 65 && strategy.performance?.recommendation_summary?.recommendation_score < 80,
+                                                     'bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-400 shadow-lg shadow-yellow-500/50': strategy.performance?.recommendation_summary?.recommendation_score >= 50 && strategy.performance?.recommendation_summary?.recommendation_score < 65,
+                                                     'bg-gradient-to-r from-red-600 via-red-500 to-red-400 shadow-lg shadow-red-500/50': strategy.performance?.recommendation_summary?.recommendation_score < 50
+                                                 }"
+                                                 :style="`width: ${strategy.performance?.recommendation_summary?.recommendation_score}%; transition: width 0.8s ease-out;`">
+                                                <!-- Inner glow effect -->
+                                                <div class="absolute inset-0 bg-gradient-to-t from-transparent via-white/20 to-transparent"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div x-show="strategy.performance">
+                            <!-- 详细指标 (统一折叠) -->
+                            <details class="mb-3">
+                                <summary class="cursor-pointer text-blue-400 text-sm font-semibold">📊 详细指标 (Profile)</summary>
+                                <div class="mt-3 space-y-4">
+                                    <!-- 核心指标 -->
+                                    <div>
+                                        <h4 class="text-xs text-blue-300 font-semibold mb-2">核心指标</h4>
+                                        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                            <div>
+                                                <div class="text-gray-400 text-xs">总收益</div>
+                                                <div class="text-base font-bold"
+                                                     :class="strategy.performance?.total_return >= 0 ? 'text-green-400' : 'text-red-400'"
+                                                     x-text="(strategy.performance?.total_return * 100).toFixed(2) + '%'"></div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-400 text-xs">Sharpe</div>
+                                                <div class="text-base font-bold" x-text="strategy.performance?.sharpe_ratio"></div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-400 text-xs">胜率</div>
+                                                <div class="text-base font-bold" x-text="(strategy.performance?.win_rate * 100).toFixed(1) + '%'"></div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-400 text-xs">盈亏比</div>
+                                                <div class="text-base font-bold text-green-400" x-text="strategy.performance?.profit_factor"></div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-400 text-xs">交易数</div>
+                                                <div class="text-base font-bold" x-text="strategy.performance?.total_trades"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 风险指标 -->
+                                    <div>
+                                        <h4 class="text-xs text-yellow-300 font-semibold mb-2">风险指标</h4>
+                                        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                            <div>
+                                                <div class="text-gray-400 text-xs">风险评分</div>
+                                                <div class="text-base font-bold text-orange-400" x-text="strategy.performance?.risk_score + '/10'"></div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-400 text-xs">最大回撤</div>
+                                                <div class="text-base font-bold text-red-400" x-text="(strategy.performance?.max_drawdown * 100).toFixed(1) + '%'"></div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-400 text-xs">平均回撤</div>
+                                                <div class="text-base font-bold" x-text="(strategy.performance?.avg_drawdown * 100).toFixed(1) + '%'"></div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-400 text-xs">波动率</div>
+                                                <div class="text-base font-bold" x-text="(strategy.performance?.volatility * 100).toFixed(1) + '%'"></div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-400 text-xs">Sortino</div>
+                                                <div class="text-base font-bold" x-text="strategy.performance?.sortino_ratio"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 交易特征 -->
+                                    <div>
+                                        <h4 class="text-xs text-purple-300 font-semibold mb-2">交易特征</h4>
+                                        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                            <div>
+                                                <div class="text-gray-400 text-xs">交易频率</div>
+                                                <div class="text-base font-bold" x-text="strategy.performance?.trade_frequency?.toFixed(1) + '/100'"></div>
+                                                <div class="text-xs text-gray-500">笔/100K线</div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-400 text-xs">持仓时间</div>
+                                                <div class="text-base font-bold" x-text="strategy.performance?.avg_holding_time?.toFixed(0) + 'h'"></div>
+                                                <div class="text-xs text-gray-500">平均</div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-400 text-xs">平均盈利</div>
+                                                <div class="text-base font-bold text-green-400" x-text="'$' + strategy.performance?.avg_win?.toFixed(0)"></div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-400 text-xs">平均亏损</div>
+                                                <div class="text-base font-bold text-red-400" x-text="'$' + strategy.performance?.avg_loss?.toFixed(0)"></div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-400 text-xs">盈亏比</div>
+                                                <div class="text-base font-bold" x-text="strategy.performance?.avg_win_loss_ratio?.toFixed(2)"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 稳定性与适应性 -->
+                                    <div>
+                                        <h4 class="text-xs text-cyan-300 font-semibold mb-2">稳定性与适应性</h4>
+                                        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                            <div>
+                                                <div class="text-gray-400 text-xs">稳定性</div>
+                                                <div class="text-base font-bold" x-text="(strategy.performance?.stability_score * 100).toFixed(0) + '%'"></div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-400 text-xs">一致性</div>
+                                                <div class="text-base font-bold" x-text="(strategy.performance?.consistency_score * 100).toFixed(0) + '%'"></div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-400 text-xs">滑点敏感度</div>
+                                                <div class="text-base font-bold"
+                                                     :class="{
+                                                         'text-green-400': strategy.performance?.slippage_sensitivity === 'low',
+                                                         'text-yellow-400': strategy.performance?.slippage_sensitivity === 'medium',
+                                                         'text-red-400': strategy.performance?.slippage_sensitivity === 'high'
+                                                     }"
+                                                     x-text="strategy.performance?.slippage_sensitivity"></div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-400 text-xs">市场类型</div>
+                                                <div class="text-base font-bold" x-text="strategy.performance?.market_regime"></div>
+                                            </div>
+                                            <div>
+                                                <div class="text-gray-400 text-xs">连续胜/负</div>
+                                                <div class="text-base font-bold">
+                                                    <span class="text-green-400" x-text="strategy.performance?.max_consecutive_wins"></span> /
+                                                    <span class="text-red-400" x-text="strategy.performance?.max_consecutive_losses"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+
+                            <!-- 策略适用性评估 -->
+                            <details class="mb-3" x-show="strategy.performance?.recommendation_summary">
+                                <summary class="cursor-pointer text-green-400 text-sm font-semibold">✅ 策略适用性评估</summary>
+                                <div class="mt-3 bg-gray-900 p-4 rounded space-y-3">
+                                    <!-- 一句话总结 -->
+                                    <p class="text-sm text-gray-200 italic pb-3 border-b border-gray-700"
+                                       x-text="strategy.performance?.recommendation_summary?.one_line_summary"></p>
+
+                                    <!-- 详细信息 -->
+                                    <div class="space-y-2 text-xs">
+                                        <div class="flex items-start">
+                                            <span class="text-green-400 mr-2 flex-shrink-0">✅</span>
+                                            <div>
+                                                <span class="text-gray-400">适合：</span>
+                                                <span class="text-white ml-1" x-text="strategy.performance?.recommendation_summary?.suitable_for"></span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start">
+                                            <span class="text-blue-400 mr-2 flex-shrink-0">💰</span>
+                                            <div>
+                                                <span class="text-gray-400">要求：</span>
+                                                <span class="text-white ml-1" x-text="strategy.performance?.recommendation_summary?.account_requirement"></span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start" x-show="strategy.performance?.recommendation_summary?.key_strengths">
+                                            <span class="text-green-400 mr-2 flex-shrink-0">✅</span>
+                                            <div>
+                                                <span class="text-gray-400">优势：</span>
+                                                <span class="text-green-300 ml-1" x-text="strategy.performance?.recommendation_summary?.key_strengths"></span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start" x-show="strategy.performance?.recommendation_summary?.key_weaknesses">
+                                            <span class="text-yellow-400 mr-2 flex-shrink-0">⚠️</span>
+                                            <div>
+                                                <span class="text-gray-400">劣势：</span>
+                                                <span class="text-yellow-300 ml-1" x-text="strategy.performance?.recommendation_summary?.key_weaknesses"></span>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start" x-show="strategy.performance?.recommendation_summary?.key_warnings && strategy.performance?.recommendation_summary?.key_warnings !== '无特殊提示'">
+                                            <span class="text-red-400 mr-2 flex-shrink-0">⚠️</span>
+                                            <div>
+                                                <span class="text-gray-400">提示：</span>
+                                                <span class="text-red-300 ml-1" x-text="strategy.performance?.recommendation_summary?.key_warnings"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+
+
+                        <!-- Strategy Code Preview -->
+                        <details class="mt-4">
+                            <summary class="cursor-pointer text-blue-400 text-sm">📄 查看策略代码</summary>
+                            <pre class="mt-2 bg-gray-900 p-4 rounded text-xs overflow-x-auto" x-text="strategy.code"></pre>
+                        </details>
+
+                        <!-- Action Buttons -->
+                        <div class="mt-4 flex gap-2" x-show="strategy.status === 'active'">
+                            <button @click="generateSignal(strategy.id)" class="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded text-sm">
+                                📊 生成信号
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Signals Tab -->
+            <div x-show="currentTab === 'signals'">
+                <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-sm font-medium">信号ID</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium">策略ID</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium">品种</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium">方向</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium">手数</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium">状态</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium">创建时间</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="signal in signals" :key="signal.id">
+                                <tr class="border-t border-gray-700">
+                                    <td class="px-4 py-3 text-sm" x-text="signal.id"></td>
+                                    <td class="px-4 py-3 text-sm text-gray-400" x-text="signal.strategy_id"></td>
+                                    <td class="px-4 py-3 text-sm font-medium" x-text="signal.symbol"></td>
+                                    <td class="px-4 py-3 text-sm">
+                                        <span :class="signal.direction === 'buy' ? 'text-green-400' : 'text-red-400'"
+                                              x-text="signal.direction.toUpperCase()"></span>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm" x-text="signal.volume"></td>
+                                    <td class="px-4 py-3 text-sm">
+                                        <span class="px-2 py-1 rounded text-xs"
+                                              :class="{
+                                                  'bg-yellow-900 text-yellow-400': signal.status === 'pending',
+                                                  'bg-green-900 text-green-400': signal.status === 'executed',
+                                                  'bg-red-900 text-red-400': signal.status === 'failed'
+                                              }"
+                                              x-text="signal.status"></span>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm text-gray-400" x-text="formatDate(signal.created_at)"></td>
+                                    <td class="px-4 py-3 text-sm">
+                                        <button x-show="signal.status === 'pending'"
+                                                @click="executeSignal(signal.id)"
+                                                class="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-xs">
+                                            ⚡ 执行
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Trades Tab -->
+            <div x-show="currentTab === 'trades'">
+                <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+                    <table class="w-full">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-sm font-medium">Ticket</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium">策略ID</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium">品种</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium">方向</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium">手数</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium">开仓价</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium">盈亏</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium">开仓时间</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="trade in trades" :key="trade.id">
+                                <tr class="border-t border-gray-700">
+                                    <td class="px-4 py-3 text-sm font-mono" x-text="trade.ticket"></td>
+                                    <td class="px-4 py-3 text-sm text-gray-400" x-text="trade.strategy_id"></td>
+                                    <td class="px-4 py-3 text-sm font-medium" x-text="trade.symbol"></td>
+                                    <td class="px-4 py-3 text-sm">
+                                        <span :class="trade.direction === 'buy' ? 'text-green-400' : 'text-red-400'"
+                                              x-text="trade.direction.toUpperCase()"></span>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm" x-text="trade.volume"></td>
+                                    <td class="px-4 py-3 text-sm" x-text="trade.open_price"></td>
+                                    <td class="px-4 py-3 text-sm font-bold"
+                                        :class="trade.profit >= 0 ? 'text-green-400' : 'text-red-400'"
+                                        x-text="trade.profit || '-'"></td>
+                                    <td class="px-4 py-3 text-sm text-gray-400" x-text="formatDate(trade.open_time)"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function dashboard() {
+            return {
+                currentTab: 'strategies',
+                stats: {
+                    total_strategies: 0,
+                    active_strategies: 0,
+                    total_signals: 0,
+                    total_trades: 0,
+                    total_profit: 0
+                },
+                strategies: [],
+                signals: [],
+                trades: [],
+
+                async init() {
+                    await this.loadStats();
+                    await this.loadStrategies();
+                    await this.loadSignals();
+                    await this.loadTrades();
+                },
+
+                async loadStats() {
+                    const response = await fetch('/api/stats');
+                    this.stats = await response.json();
+                },
+
+                async loadStrategies() {
+                    const response = await fetch('/api/strategies');
+                    const data = await response.json();
+                    this.strategies = data.strategies;
+                },
+
+                async loadSignals() {
+                    const response = await fetch('/api/signals');
+                    const data = await response.json();
+                    this.signals = data.signals;
+                },
+
+                async loadTrades() {
+                    const response = await fetch('/api/trades');
+                    const data = await response.json();
+                    this.trades = data.trades;
+                },
+
+                async refresh() {
+                    await this.init();
+                },
+
+                async generateStrategies() {
+                    try {
+                        const response = await fetch('/api/actions/generate-strategies', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({count: 2})
+                        });
+                        const result = await response.json();
+
+                        // Strategy服务返回的是 strategy_ids，不是 strategies
+                        const count = result.strategy_ids?.length || 0;
+                        if (result.success) {
+                            alert(`策略生成成功！\n${result.message}\n策略ID: ${result.strategy_ids?.join(', ')}`);
+                        } else {
+                            alert(`生成失败：${result.message}`);
+                        }
+                        await this.refresh();
+                    } catch (error) {
+                        alert(`生成失败：${error.message}`);
+                    }
+                },
+
+                async generateSignal(strategyId) {
+                    try {
+                        const response = await fetch('/api/actions/generate-signal', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({strategy_id: strategyId, symbol: 'EURUSD'})
+                        });
+                        const result = await response.json();
+
+                        if (result.success) {
+                            alert(`信号生成成功！\n${result.message}\n信号ID: ${result.signal_id}`);
+                        } else {
+                            alert(`生成失败：${result.message || 'Unknown error'}`);
+                        }
+                        await this.refresh();
+                    } catch (error) {
+                        alert(`生成失败：${error.message}`);
+                    }
+                },
+
+                async executeSignal(signalId) {
+                    if (!confirm(`确定要执行信号 ${signalId} 吗？`)) return;
+
+                    try {
+                        const response = await fetch('/api/actions/execute-signal', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({signal_id: signalId})
+                        });
+                        const result = await response.json();
+
+                        if (result.success) {
+                            alert(`订单执行成功！\n${result.message}\nTicket: ${result.ticket}\n交易ID: ${result.trade_id}`);
+                        } else {
+                            alert(`执行失败：${result.message || 'Unknown error'}`);
+                        }
+                        await this.refresh();
+                    } catch (error) {
+                        alert(`执行失败：${error.message}`);
+                    }
+                },
+
+                formatDate(dateString) {
+                    if (!dateString) return '-';
+                    return new Date(dateString).toLocaleString('zh-CN');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
