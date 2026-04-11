@@ -2,7 +2,7 @@
 from src.common.models.signal import Signal, SignalStatus, Direction
 from src.common.models.strategy import Strategy
 from src.common.utils.id_generator import generate_signal_id
-from src.common.mt5 import get_mt5_client
+from src.common.mt5 import mt5_manager
 from ..repository.signal_repo import SignalRepository
 from .strategy_runner import StrategyRunner
 
@@ -13,7 +13,7 @@ class SignalOrchestrator:
     def __init__(self, signal_repo: SignalRepository):
         self.signal_repo = signal_repo
         self.strategy_runner = StrategyRunner()
-        self.mt5_client = get_mt5_client()
+        self.mt5_manager = mt5_manager
 
     def generate_signal(self, strategy: Strategy, symbol: str) -> Signal:
         """
@@ -26,12 +26,14 @@ class SignalOrchestrator:
         Returns:
             Signal对象
         """
-        # 1. 初始化MT5
-        if not self.mt5_client.initialize():
-            raise RuntimeError("MT5初始化失败")
+        # 1. 确保MT5已连接
+        if not self.mt5_manager.is_connected():
+            if not self.mt5_manager.connect(use_investor=True):
+                raise RuntimeError("MT5连接失败")
 
         # 2. 获取市场数据
-        market_data = self.mt5_client.get_bars(symbol, timeframe="H1", count=100)
+        mt5_client = self.mt5_manager.get_client()
+        market_data = mt5_client.get_bars(symbol, timeframe="1h", count=100)
 
         if market_data.empty:
             raise ValueError(f"无法获取 {symbol} 的市场数据")

@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routes import signal
+from .routes import signal, registration, account, portfolio, risk, evaluation, accounts_db, platform
 
 # 创建FastAPI应用
 app = FastAPI(
@@ -21,7 +21,14 @@ app.add_middleware(
 )
 
 # 注册路由
-app.include_router(signal.router)
+app.include_router(signal.router)            # 信号管理
+app.include_router(registration.router)      # 策略注册服务
+app.include_router(account.router)           # 账户管理（配置）
+app.include_router(accounts_db.router)       # 账户管理（数据库）
+app.include_router(platform.router)          # 平台检测
+app.include_router(portfolio.router)         # 组合管理
+app.include_router(risk.router)              # 风险管理
+app.include_router(evaluation.router)        # 信号评估
 
 
 @app.get("/")

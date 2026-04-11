@@ -1,4 +1,15 @@
-INFO:     Started server process [72825]
+INFO:     Started server process [82864]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8003 (Press CTRL+C to quit)
+🔌 使用Mock MT5客户端 (Darwin - 开发模式)
+🚀 Execution Service 启动中...
+📡 连接MT5 [交易模式]: 5049130509@MetaQuotes-Demo
+[MockMT5] 初始化连接（模拟）
+[MockMT5] 自动登录: 5049130509@MetaQuotes-Demo
+[MockMT5] 登录账户（模拟）: 5049130509@MetaQuotes-Demo
+✅ MT5连接成功 [交易模式]
+   账户余额: 10000.0 USD
+   杠杆: 1:100
+   交易权限: 是
+INFO:     127.0.0.1:51713 - "GET /health HTTP/1.1" 200 OK

@@ -29,13 +29,77 @@ services:
   # API层：Web界面、数据展示、操作控制
   dashboard:
     host: "0.0.0.0"
-    port: 8004
+    port: 8000
     workers: 1
 
+# 服务URL配置 - 用于服务间调用
+service_urls:
+  strategy: "http://127.0.0.1:8001"
+  orchestrator: "http://127.0.0.1:8002"
+  execution: "http://127.0.0.1:8003"
+  dashboard: "http://127.0.0.1:8000"
+
 mt5:
+  company: "MetaQuotes Ltd."
+  server: "MetaQuotes-Demo"
   login: 5049130509
   password: "-ySbKy4z"
-  server: "MetaQuotes-Demo"
+  investor_password: "Fn@4ElKo"
+
+  # 可选：代理设置（如果需要）
+  proxy:
+    enabled: false
+    host: ""      # 例如: "127.0.0.1"
+    port: 0       # 例如: 8888
+    type: "HTTP"  # HTTP/HTTPS/SOCKS5
+
+# Orchestrator配置 - 策略编排和资金管理
+orchestrator:
+  # 策略注册服务 - 策略激活标准
+  activation:
+    # 推荐度分数阈值（0-100）
+    min_recommendation_score: 65     # 最低推荐度65分
+
+    # 收益率阈值
+    min_total_return: 0.03           # 最低收益率3%
+
+    # 风险调整收益指标
+    min_sharpe_ratio: 0.50           # 最低Sharpe比率0.5
+    max_drawdown: 0.12               # 最大回撤12%
+
+    # 交易表现指标
+    min_win_rate: 0.35               # 最低胜率35%
+    min_profit_factor: 1.5           # 最低盈亏比1.5
+
+    # 稳定性指标
+    min_stability_score: 0.45        # 最低稳定性分数45%
+
+    # 激活条件：核心指标（recommendation_score, total_return, sharpe_ratio, max_drawdown）
+    # 至少通过3个才能激活
+
+  # 资金管理配置
+  portfolio:
+    initial_balance: 10000.0         # 初始资金
+    max_total_exposure: 0.30         # 总仓位上限30%
+    max_strategy_allocation: 0.10    # 单策略上限10%
+    risk_per_trade: 0.02             # 单笔风险2%
+
+  # 配比策略
+  allocation:
+    mode: "balanced"                 # balanced/aggressive/conservative
+    max_strategies: 5                # 最多同时运行5个策略
+    rebalance_interval_hours: 24     # 每24小时重新平衡
+
+  # 风险管理
+  risk:
+    # 全局风险限制
+    max_daily_loss: 0.05             # 单日最大亏损5%
+    max_concurrent_trades: 10        # 最大并发交易数
+    max_correlation: 0.70            # 策略间最大相关性
+
+    # 单策略风险限制
+    max_strategy_drawdown: 0.15      # 单策略最大回撤15%
+    max_strategy_exposure: 0.12      # 单策略最大仓位12%
 
 # 策略评估配置
 strategy_evaluation:

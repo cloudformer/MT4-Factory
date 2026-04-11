@@ -9,16 +9,21 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
 </head>
 <body class="bg-gray-900 text-gray-100">
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
     <div x-data="dashboard()" x-init="init()">
         <!-- Header -->
-        <header class="bg-gray-800 border-b border-gray-700 p-4">
+        <header class="bg-gray-800 border-b border-gray-700 p-4 shadow-lg">
             <div class="container mx-auto flex justify-between items-center">
                 <h1 class="text-2xl font-bold text-blue-400">Evo Trade System V1</h1>
-                <div class="flex gap-4">
-                    <button @click="generateStrategies()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">
+                <div class="flex gap-3">
+                    <button @click="generateStrategies()"
+                            class="bg-green-700 hover:bg-green-800 px-5 py-2.5 rounded-lg font-medium transition-all hover:shadow-lg hover:scale-105">
                         🔧 生成策略
                     </button>
-                    <button @click="refresh()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">
+                    <button @click="refresh()"
+                            class="bg-blue-700 hover:bg-blue-800 px-5 py-2.5 rounded-lg font-medium transition-all hover:shadow-lg hover:scale-105">
                         🔄 刷新数据
                     </button>
                 </div>
@@ -28,23 +33,23 @@
         <!-- Stats Cards -->
         <div class="container mx-auto p-6">
             <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-                <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-md hover:shadow-lg transition-shadow">
                     <div class="text-gray-400 text-sm">策略总数</div>
                     <div class="text-3xl font-bold text-blue-400" x-text="stats.total_strategies"></div>
                 </div>
-                <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-md hover:shadow-lg transition-shadow">
                     <div class="text-gray-400 text-sm">活跃策略</div>
                     <div class="text-3xl font-bold text-green-400" x-text="stats.active_strategies"></div>
                 </div>
-                <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-md hover:shadow-lg transition-shadow">
                     <div class="text-gray-400 text-sm">信号总数</div>
                     <div class="text-3xl font-bold text-yellow-400" x-text="stats.total_signals"></div>
                 </div>
-                <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-md hover:shadow-lg transition-shadow">
                     <div class="text-gray-400 text-sm">交易总数</div>
                     <div class="text-3xl font-bold text-purple-400" x-text="stats.total_trades"></div>
                 </div>
-                <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-md hover:shadow-lg transition-shadow">
                     <div class="text-gray-400 text-sm">总盈亏</div>
                     <div class="text-3xl font-bold"
                          :class="stats.total_profit >= 0 ? 'text-green-400' : 'text-red-400'"
@@ -59,6 +64,11 @@
                             :class="currentTab === 'strategies' ? 'border-blue-400 text-blue-400' : 'border-transparent text-gray-400'"
                             class="px-4 py-2 border-b-2 font-medium">
                         策略列表
+                    </button>
+                    <button @click="currentTab = 'accounts'"
+                            :class="currentTab === 'accounts' ? 'border-blue-400 text-blue-400' : 'border-transparent text-gray-400'"
+                            class="px-4 py-2 border-b-2 font-medium">
+                        账户管理
                     </button>
                     <button @click="currentTab = 'signals'"
                             :class="currentTab === 'signals' ? 'border-blue-400 text-blue-400' : 'border-transparent text-gray-400'"
@@ -75,8 +85,39 @@
 
             <!-- Strategies Tab -->
             <div x-show="currentTab === 'strategies'" class="space-y-4">
-                <template x-for="strategy in strategies" :key="strategy.id">
-                    <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                <!-- 筛选器和工具栏 -->
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-sm">
+                    <div class="flex items-center justify-between gap-4">
+                        <!-- 左侧：筛选器 -->
+                        <div class="flex items-center gap-4">
+                            <label class="text-sm text-gray-400">状态筛选:</label>
+                            <select x-model="statusFilter" class="bg-gray-700 text-white px-3 py-2 rounded">
+                                <option value="all">全部</option>
+                                <option value="active">激活 (Active)</option>
+                                <option value="candidate">候选 (Candidate)</option>
+                                <option value="archived">归档 (Archived)</option>
+                            </select>
+
+                            <label class="text-sm text-gray-400 ml-4">推荐度筛选:</label>
+                            <select x-model="scoreFilter" class="bg-gray-700 text-white px-3 py-2 rounded">
+                                <option value="0">全部</option>
+                                <option value="80">优秀 (≥80分)</option>
+                                <option value="65">推荐 (≥65分)</option>
+                                <option value="50">可用 (≥50分)</option>
+                            </select>
+                        </div>
+
+                        <!-- 右侧：批量操作 -->
+                        <button @click="batchEvaluate()"
+                                class="bg-blue-700 hover:bg-blue-800 text-white px-5 py-2.5 rounded-lg font-medium transition-all hover:shadow-lg">
+                            🔄 批量评估并激活
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 策略列表 -->
+                <template x-for="strategy in filteredStrategies" :key="strategy.id">
+                    <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-md hover:shadow-lg transition-shadow">
                         <!-- Header -->
                         <div class="mb-4">
                             <div class="flex justify-between items-start gap-4">
@@ -278,10 +319,17 @@
                                 </div>
                             </details>
 
-                            <!-- 策略适用性评估 -->
+                            <!-- 推荐度报告（静态） -->
                             <details class="mb-3" x-show="strategy.performance?.recommendation_summary">
-                                <summary class="cursor-pointer text-green-400 text-sm font-semibold">✅ 策略适用性评估</summary>
+                                <summary class="cursor-pointer text-green-400 text-sm font-semibold" title="查看策略的推荐度分析和适用人群（静态数据，无需联网）">
+                                    📊 推荐度报告（静态数据）
+                                </summary>
                                 <div class="mt-3 bg-gray-900 p-4 rounded space-y-3">
+                                    <div class="text-xs text-gray-500 mb-2 flex items-center gap-2">
+                                        <span>💾 静态数据</span>
+                                        <span>|</span>
+                                        <span>策略注册时生成的推荐度分析</span>
+                                    </div>
                                     <!-- 一句话总结 -->
                                     <p class="text-sm text-gray-200 italic pb-3 border-b border-gray-700"
                                        x-text="strategy.performance?.recommendation_summary?.one_line_summary"></p>
@@ -336,27 +384,307 @@
                         </details>
 
                         <!-- Action Buttons -->
-                        <div class="mt-4 flex gap-2" x-show="strategy.status === 'active'">
-                            <button @click="generateSignal(strategy.id)" class="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded text-sm">
+                        <div class="mt-4 flex gap-2">
+                            <!-- 激活按钮（只在candidate状态显示） -->
+                            <button x-show="strategy.status === 'candidate'"
+                                    @click="activateStrategy(strategy.id)"
+                                    class="bg-green-700 hover:bg-green-800 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm hover:shadow-md">
+                                ✅ 激活策略
+                            </button>
+
+                            <!-- 停用按钮（只在active状态显示） -->
+                            <button x-show="strategy.status === 'active'"
+                                    @click="deactivateStrategy(strategy.id)"
+                                    class="bg-orange-800 hover:bg-orange-900 px-4 py-2 rounded text-sm transition-colors">
+                                ⏸️ 停用策略
+                            </button>
+
+                            <!-- 恢复按钮（只在archived状态显示） -->
+                            <button x-show="strategy.status === 'archived'"
+                                    @click="restoreStrategy(strategy.id)"
+                                    class="bg-purple-700 hover:bg-purple-800 px-4 py-2 rounded text-sm transition-colors">
+                                🔄 恢复到候选
+                            </button>
+
+                            <!-- 归档按钮（只在candidate状态显示） -->
+                            <button x-show="strategy.status === 'candidate'"
+                                    @click="archiveStrategy(strategy.id)"
+                                    class="bg-gray-700 hover:bg-gray-800 px-4 py-2 rounded text-sm transition-colors">
+                                📦 归档策略
+                            </button>
+
+                            <!-- 生成信号按钮（只在active状态显示） -->
+                            <button x-show="strategy.status === 'active'"
+                                    @click="generateSignal(strategy.id)"
+                                    class="bg-yellow-700 hover:bg-yellow-800 px-4 py-2 rounded text-sm transition-colors">
                                 📊 生成信号
+                            </button>
+
+                            <!-- 实时检查激活条件（所有状态都可查看） -->
+                            <button @click="evaluateStrategy(strategy.id)"
+                                    class="bg-blue-800 hover:bg-blue-900 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm hover:shadow-md"
+                                    title="实时调用API检查策略是否符合激活标准（动态计算，显示最新评估结果）">
+                                🔄 实时检查激活条件
+                            </button>
+
+                            <!-- 删除按钮（所有状态都可删除） -->
+                            <button @click="deleteStrategy(strategy.id)"
+                                    class="bg-red-800 hover:bg-red-900 px-4 py-2 rounded text-sm transition-colors">
+                                🗑️ 删除策略
                             </button>
                         </div>
                     </div>
                 </template>
             </div>
 
+            <!-- Accounts Tab -->
+            <div x-show="currentTab === 'accounts'" class="space-y-4">
+                <!-- Platform Status Banner -->
+                <div x-show="platformInfo" class="rounded-lg border p-4"
+                     :class="{
+                         'bg-green-900/20 border-green-700': platformInfo?.is_windows && platformInfo?.sync_status?.success,
+                         'bg-yellow-900/20 border-yellow-700': platformInfo?.is_windows && !platformInfo?.sync_status?.success,
+                         'bg-blue-900/20 border-blue-700': platformInfo?.is_mock
+                     }">
+                    <!-- Windows - Sync Success -->
+                    <div x-show="platformInfo?.is_windows && platformInfo?.sync_status?.success"
+                         class="flex items-start gap-3">
+                        <div class="text-2xl">✅</div>
+                        <div class="flex-1">
+                            <div class="font-bold text-green-400 mb-1">MT5连接成功</div>
+                            <div class="text-sm text-gray-300" x-text="platformInfo?.sync_status?.message"></div>
+                            <div class="text-xs text-gray-400 mt-2">
+                                <span>余额: </span>
+                                <span class="font-mono" x-text="platformInfo?.sync_status?.balance"></span>
+                                <span class="mx-2">|</span>
+                                <span>净值: </span>
+                                <span class="font-mono" x-text="platformInfo?.sync_status?.equity"></span>
+                                <span class="mx-2">|</span>
+                                <span>同步时间: </span>
+                                <span x-text="accounts[0]?.last_sync_time ? new Date(accounts[0].last_sync_time).toLocaleString() : '-'"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Windows - Sync Failed -->
+                    <div x-show="platformInfo?.is_windows && !platformInfo?.sync_status?.success"
+                         class="flex items-start gap-3">
+                        <div class="text-2xl">
+                            <span x-show="platformInfo?.sync_status?.error_type === 'mt5_not_installed' ||
+                                          platformInfo?.sync_status?.error_type === 'module_not_found' ||
+                                          platformInfo?.sync_status?.error_type === 'initialization_failed'">❌</span>
+                            <span x-show="platformInfo?.sync_status?.error_type !== 'mt5_not_installed' &&
+                                          platformInfo?.sync_status?.error_type !== 'module_not_found' &&
+                                          platformInfo?.sync_status?.error_type !== 'initialization_failed'">⚠️</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-bold mb-1"
+                                 :class="(platformInfo?.sync_status?.error_type === 'mt5_not_installed' ||
+                                          platformInfo?.sync_status?.error_type === 'module_not_found' ||
+                                          platformInfo?.sync_status?.error_type === 'initialization_failed')
+                                         ? 'text-red-400' : 'text-yellow-400'"
+                                 x-text="platformInfo?.sync_status?.message"></div>
+
+                            <!-- Error Detail -->
+                            <div x-show="platformInfo?.sync_status?.error_detail"
+                                 class="text-xs text-gray-400 mt-1 mb-2 font-mono bg-gray-900 p-2 rounded">
+                                <span x-text="platformInfo?.sync_status?.error_detail"></span>
+                            </div>
+
+                            <!-- Solutions -->
+                            <div x-show="platformInfo?.sync_status?.solutions" class="mt-2">
+                                <div class="text-xs font-semibold text-blue-400 mb-1">解决方法：</div>
+                                <div class="text-xs text-gray-300 space-y-0.5">
+                                    <template x-for="solution in platformInfo?.sync_status?.solutions" :key="solution">
+                                        <div x-text="solution" class="pl-2"></div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- macOS/Linux - Mock Mode -->
+                    <div x-show="platformInfo?.is_mock"
+                         class="flex items-start gap-3">
+                        <div class="text-2xl">ℹ️</div>
+                        <div class="flex-1">
+                            <div class="font-bold text-blue-400 mb-1">Mock模式（开发环境）</div>
+                            <div class="text-sm text-gray-300">
+                                当前运行在 <span x-text="platformInfo?.system"></span> 系统，显示模拟数据
+                            </div>
+                            <div class="text-xs text-gray-400 mt-1">
+                                ⚠️ 无法查看实时MT5数据 - 真实数据需要在Windows系统上运行
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <template x-for="account in accounts" :key="account.id">
+                    <div class="bg-gray-800 rounded-lg border border-gray-700">
+                        <!-- Account Header (always visible) -->
+                        <div class="p-6 cursor-pointer hover:bg-gray-750"
+                             @click="toggleAccountExpand(account.id)">
+                            <div class="flex justify-between items-center">
+                                <!-- Left: Account Info -->
+                                <div class="flex items-center gap-6">
+                                    <div>
+                                        <h3 class="text-xl font-bold text-blue-400" x-text="account.name"></h3>
+                                        <p class="text-sm text-gray-400">
+                                            <span>Login: </span>
+                                            <button @click="viewAccountTrades(account.login)"
+                                                    class="text-blue-400 hover:text-blue-300 underline cursor-pointer"
+                                                    x-text="account.login"></button>
+                                            <span class="mx-2">|</span>
+                                            <span x-text="account.server"></span>
+                                        </p>
+                                    </div>
+                                    <!-- Status Badges -->
+                                    <div class="flex gap-2">
+                                        <span class="px-2 py-1 rounded text-xs font-medium"
+                                              :class="account.is_active ? 'bg-green-900 text-green-400' : 'bg-gray-700 text-gray-400'"
+                                              x-text="account.is_active ? '激活' : '停用'"></span>
+                                        <span class="px-2 py-1 rounded text-xs font-medium"
+                                              :class="account.trade_allowed ? 'bg-blue-900 text-blue-400' : 'bg-red-900 text-red-400'"
+                                              x-text="account.trade_allowed ? '可交易' : '禁止交易'"></span>
+                                    </div>
+                                </div>
+
+                                <!-- Right: Summary Stats -->
+                                <div class="flex items-center gap-8">
+                                    <div class="text-right">
+                                        <div class="text-gray-400 text-xs">当前余额</div>
+                                        <div class="text-lg font-bold text-white"
+                                             x-text="(account.current_balance || 0).toFixed(2) + ' ' + account.currency"></div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-gray-400 text-xs">净值</div>
+                                        <div class="text-lg font-bold text-white"
+                                             x-text="(account.current_equity || 0).toFixed(2) + ' ' + account.currency"></div>
+                                    </div>
+                                    <div class="text-right" x-show="account.summary">
+                                        <div class="text-gray-400 text-xs">总盈亏</div>
+                                        <div class="text-lg font-bold"
+                                             :class="(account.summary?.total_pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'"
+                                             x-text="((account.summary?.total_pnl || 0) >= 0 ? '+' : '') + (account.summary?.total_pnl || 0).toFixed(2)"></div>
+                                    </div>
+                                    <!-- Expand Icon -->
+                                    <div class="text-gray-400 text-xl ml-4"
+                                         x-text="expandedAccounts[account.id] ? '▼' : '▶'"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Expanded Details -->
+                        <div x-show="expandedAccounts[account.id]"
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0"
+                             x-transition:enter-end="opacity-100"
+                             class="border-t border-gray-700 p-6 bg-gray-850">
+
+                            <div class="grid grid-cols-2 gap-6">
+                                <!-- Left: Strategy Allocations -->
+                                <div>
+                                    <h4 class="text-lg font-semibold text-blue-300 mb-4">📊 策略配比</h4>
+                                    <div x-show="!account.allocations || account.allocations.length === 0"
+                                         class="text-gray-400 text-sm">
+                                        暂无策略配比
+                                    </div>
+                                    <div x-show="account.allocations && account.allocations.length > 0"
+                                         class="space-y-3">
+                                        <template x-for="alloc in account.allocations" :key="alloc.id">
+                                            <div class="bg-gray-800 p-3 rounded border border-gray-700">
+                                                <div class="flex justify-between items-center">
+                                                    <div>
+                                                        <div class="text-white font-medium" x-text="alloc.strategy_id"></div>
+                                                        <div class="text-xs text-gray-400"
+                                                             x-text="'配比: ' + (alloc.allocation_percentage * 100).toFixed(1) + '%'"></div>
+                                                    </div>
+                                                    <!-- Progress Bar -->
+                                                    <div class="w-32">
+                                                        <div class="bg-gray-700 rounded-full h-2 overflow-hidden">
+                                                            <div class="bg-blue-500 h-full rounded-full"
+                                                                 :style="'width: ' + (alloc.allocation_percentage * 100) + '%'"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <!-- Right: Profit Summary -->
+                                <div>
+                                    <h4 class="text-lg font-semibold text-green-300 mb-4">💰 盈利统计</h4>
+                                    <div x-show="!account.summary" class="text-gray-400 text-sm">
+                                        加载中...
+                                    </div>
+                                    <div x-show="account.summary" class="grid grid-cols-2 gap-4">
+                                        <div class="bg-gray-800 p-3 rounded">
+                                            <div class="text-gray-400 text-xs">上线时间</div>
+                                            <div class="text-white text-sm"
+                                                 x-text="account.summary?.start_time ? new Date(account.summary.start_time).toLocaleDateString() : '-'"></div>
+                                        </div>
+                                        <div class="bg-gray-800 p-3 rounded">
+                                            <div class="text-gray-400 text-xs">交易数</div>
+                                            <div class="text-white text-sm font-bold"
+                                                 x-text="account.summary?.trade_count || 0"></div>
+                                        </div>
+                                        <div class="bg-gray-800 p-3 rounded">
+                                            <div class="text-gray-400 text-xs">胜率</div>
+                                            <div class="font-bold text-sm"
+                                                 :class="(account.summary?.win_rate || 0) >= 0.5 ? 'text-green-400' : 'text-yellow-400'"
+                                                 x-text="((account.summary?.win_rate || 0) * 100).toFixed(1) + '%'"></div>
+                                        </div>
+                                        <div class="bg-gray-800 p-3 rounded">
+                                            <div class="text-gray-400 text-xs">盈亏比例</div>
+                                            <div class="font-bold text-sm"
+                                                 :class="(account.summary?.total_pnl_percentage || 0) >= 0 ? 'text-green-400' : 'text-red-400'"
+                                                 x-text="((account.summary?.total_pnl_percentage || 0) >= 0 ? '+' : '') + ((account.summary?.total_pnl_percentage || 0) * 100).toFixed(2) + '%'"></div>
+                                        </div>
+                                        <div class="bg-gray-800 p-3 rounded">
+                                            <div class="text-gray-400 text-xs">最大回撤</div>
+                                            <div class="text-red-400 text-sm font-bold"
+                                                 x-text="'-' + (account.summary?.max_drawdown || 0).toFixed(2)"></div>
+                                        </div>
+                                        <div class="bg-gray-800 p-3 rounded">
+                                            <div class="text-gray-400 text-xs">回撤比例</div>
+                                            <div class="text-red-400 text-sm font-bold"
+                                                 x-text="'-' + ((account.summary?.max_drawdown_percentage || 0) * 100).toFixed(2) + '%'"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- View Trade Records Button -->
+                                    <button @click="viewAccountTrades(account.login)"
+                                            class="mt-4 w-full bg-blue-700 hover:bg-blue-800 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-all hover:shadow-md">
+                                        📋 查看交易记录
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Empty State -->
+                <div x-show="accounts.length === 0"
+                     class="bg-gray-800 p-12 rounded-lg border border-gray-700 text-center">
+                    <div class="text-gray-400 text-lg">暂无账户数据</div>
+                    <div class="text-gray-500 text-sm mt-2">请先初始化账户数据库</div>
+                </div>
+            </div>
+
             <!-- Signals Tab -->
             <div x-show="currentTab === 'signals'">
-                <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+                <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden shadow-md">
                     <table class="w-full">
                         <thead class="bg-gray-700">
                             <tr>
                                 <th class="px-4 py-3 text-left text-sm font-medium">信号ID</th>
                                 <th class="px-4 py-3 text-left text-sm font-medium">策略ID</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium">注册状态</th>
                                 <th class="px-4 py-3 text-left text-sm font-medium">品种</th>
                                 <th class="px-4 py-3 text-left text-sm font-medium">方向</th>
                                 <th class="px-4 py-3 text-left text-sm font-medium">手数</th>
-                                <th class="px-4 py-3 text-left text-sm font-medium">状态</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium">信号状态</th>
                                 <th class="px-4 py-3 text-left text-sm font-medium">创建时间</th>
                                 <th class="px-4 py-3 text-left text-sm font-medium">操作</th>
                             </tr>
@@ -366,6 +694,15 @@
                                 <tr class="border-t border-gray-700">
                                     <td class="px-4 py-3 text-sm" x-text="signal.id"></td>
                                     <td class="px-4 py-3 text-sm text-gray-400" x-text="signal.strategy_id"></td>
+                                    <td class="px-4 py-3 text-sm">
+                                        <span class="px-2 py-1 rounded text-xs"
+                                              :class="{
+                                                  'bg-green-900 text-green-400': getStrategyStatus(signal.strategy_id) === 'active',
+                                                  'bg-yellow-900 text-yellow-400': getStrategyStatus(signal.strategy_id) === 'candidate',
+                                                  'bg-gray-700 text-gray-400': getStrategyStatus(signal.strategy_id) === 'archived'
+                                              }"
+                                              x-text="getStrategyStatus(signal.strategy_id) || '-'"></span>
+                                    </td>
                                     <td class="px-4 py-3 text-sm font-medium" x-text="signal.symbol"></td>
                                     <td class="px-4 py-3 text-sm">
                                         <span :class="signal.direction === 'buy' ? 'text-green-400' : 'text-red-400'"
@@ -398,12 +735,89 @@
 
             <!-- Trades Tab -->
             <div x-show="currentTab === 'trades'">
-                <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+                <!-- 筛选器 -->
+                <div class="mb-4 bg-gray-800 rounded-xl border border-gray-700 p-4 shadow-md">
+                    <div class="flex gap-4 items-end">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">账号ID</label>
+                            <input type="text"
+                                   x-model="tradeFilters.account_id"
+                                   @keyup.enter="applyTradeFilters()"
+                                   placeholder="输入账号Login (如: 5049130509)"
+                                   class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">策略ID</label>
+                            <input type="text"
+                                   x-model="tradeFilters.strategy_id"
+                                   @keyup.enter="applyTradeFilters()"
+                                   placeholder="输入策略ID (如: STR_8a12e1ad)"
+                                   class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div class="w-48">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">策略状态</label>
+                            <select x-model="tradeFilters.strategy_status"
+                                    class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                                <option value="all">全部</option>
+                                <option value="active">激活 (ACTIVE)</option>
+                                <option value="candidate">候选 (CANDIDATE)</option>
+                                <option value="archived">归档 (ARCHIVED)</option>
+                            </select>
+                        </div>
+                        <button @click="applyTradeFilters()"
+                                class="bg-blue-700 hover:bg-blue-600 text-white px-6 py-2 rounded text-sm font-medium transition-colors shadow-sm hover:shadow-md">
+                            🔍 搜索
+                        </button>
+                        <button @click="clearTradeFilters()"
+                                class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded text-sm transition-colors">
+                            🔄 清除
+                        </button>
+                    </div>
+                    <!-- 筛选结果提示 -->
+                    <div class="mt-3 space-y-2">
+                        <!-- 第一行：筛选条件 -->
+                        <div class="flex items-center justify-between text-sm">
+                            <div class="text-gray-400">
+                                <span x-show="tradeFilters.account_id && tradeFilters.account_id.trim() !== ''">
+                                    账号: <span class="text-blue-400" x-text="tradeFilters.account_id"></span>
+                                </span>
+                                <span x-show="(tradeFilters.account_id && tradeFilters.account_id.trim() !== '') && (tradeFilters.strategy_id && tradeFilters.strategy_id.trim() !== '')" class="mx-2">|</span>
+                                <span x-show="tradeFilters.strategy_id && tradeFilters.strategy_id.trim() !== ''">
+                                    策略: <span class="text-blue-400" x-text="tradeFilters.strategy_id"></span>
+                                </span>
+                                <span x-show="((tradeFilters.account_id && tradeFilters.account_id.trim() !== '') || (tradeFilters.strategy_id && tradeFilters.strategy_id.trim() !== '')) && tradeFilters.strategy_status !== 'all'" class="mx-2">|</span>
+                                <span x-show="tradeFilters.strategy_status !== 'all'">
+                                    状态: <span class="text-blue-400" x-text="tradeFilters.strategy_status === 'active' ? '激活' : (tradeFilters.strategy_status === 'candidate' ? '候选' : (tradeFilters.strategy_status === 'archived' ? '归档' : ''))"></span>
+                                </span>
+                                <span x-show="(!tradeFilters.account_id || tradeFilters.account_id.trim() === '') && (!tradeFilters.strategy_id || tradeFilters.strategy_id.trim() === '') && tradeFilters.strategy_status === 'all'" class="text-gray-500">
+                                    显示所有交易记录
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-6">
+                                <div class="text-gray-400">
+                                    找到 <span class="text-green-400 font-bold" x-text="filteredTrades.length"></span> 条记录
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-gray-400">
+                                        盈亏(<span x-text="filteredTrades.length"></span>条):
+                                    </span>
+                                    <span class="font-bold text-lg"
+                                          :class="filteredTotalProfit >= 0 ? 'text-green-400' : 'text-red-400'"
+                                          x-text="(filteredTotalProfit >= 0 ? '+' : '') + filteredTotalProfit.toFixed(2) + ' USD'">
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden shadow-md">
                     <table class="w-full">
                         <thead class="bg-gray-700">
                             <tr>
                                 <th class="px-4 py-3 text-left text-sm font-medium">Ticket</th>
                                 <th class="px-4 py-3 text-left text-sm font-medium">策略ID</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium">注册状态</th>
                                 <th class="px-4 py-3 text-left text-sm font-medium">品种</th>
                                 <th class="px-4 py-3 text-left text-sm font-medium">方向</th>
                                 <th class="px-4 py-3 text-left text-sm font-medium">手数</th>
@@ -413,10 +827,19 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <template x-for="trade in trades" :key="trade.id">
+                            <template x-for="trade in paginatedTrades" :key="trade.id">
                                 <tr class="border-t border-gray-700">
                                     <td class="px-4 py-3 text-sm font-mono" x-text="trade.ticket"></td>
                                     <td class="px-4 py-3 text-sm text-gray-400" x-text="trade.strategy_id"></td>
+                                    <td class="px-4 py-3 text-sm">
+                                        <span class="px-2 py-1 rounded text-xs"
+                                              :class="{
+                                                  'bg-green-900 text-green-400': getStrategyStatus(trade.strategy_id) === 'active',
+                                                  'bg-yellow-900 text-yellow-400': getStrategyStatus(trade.strategy_id) === 'candidate',
+                                                  'bg-gray-700 text-gray-400': getStrategyStatus(trade.strategy_id) === 'archived'
+                                              }"
+                                              x-text="getStrategyStatus(trade.strategy_id) || '-'"></span>
+                                    </td>
                                     <td class="px-4 py-3 text-sm font-medium" x-text="trade.symbol"></td>
                                     <td class="px-4 py-3 text-sm">
                                         <span :class="trade.direction === 'buy' ? 'text-green-400' : 'text-red-400'"
@@ -432,12 +855,112 @@
                             </template>
                         </tbody>
                     </table>
+
+                    <!-- 分页器 -->
+                    <div class="bg-gray-750 px-4 py-3 border-t border-gray-700 flex items-center justify-between">
+                        <!-- 左侧：每页数量选择 -->
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="text-gray-400">每页显示:</span>
+                            <select x-model.number="pageSize"
+                                    @change="changePageSize(pageSize)"
+                                    class="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-blue-500">
+                                <option value="20">20 条</option>
+                                <option value="50">50 条</option>
+                                <option value="100">100 条</option>
+                            </select>
+                            <span class="text-gray-400 ml-4">
+                                显示 <span class="text-white font-medium" x-text="(currentPage - 1) * pageSize + 1"></span>
+                                -
+                                <span class="text-white font-medium" x-text="Math.min(currentPage * pageSize, filteredTrades.length)"></span>
+                                / 共 <span class="text-white font-medium" x-text="filteredTrades.length"></span> 条
+                            </span>
+                        </div>
+
+                        <!-- 右侧：页码 -->
+                        <div class="flex items-center gap-2">
+                            <!-- 上一页 -->
+                            <button @click="changePage(currentPage - 1)"
+                                    :disabled="currentPage === 1"
+                                    :class="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-600'"
+                                    class="px-3 py-1 rounded text-sm text-white bg-gray-700 transition-colors">
+                                ← 上一页
+                            </button>
+
+                            <!-- 页码按钮 -->
+                            <template x-for="page in Array.from({length: totalPages}, (_, i) => i + 1)" :key="page">
+                                <button x-show="page === 1 || page === totalPages || Math.abs(page - currentPage) <= 2"
+                                        @click="changePage(page)"
+                                        :class="page === currentPage ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'"
+                                        class="px-3 py-1 rounded text-sm transition-colors min-w-[40px]"
+                                        x-text="page"></button>
+                            </template>
+
+                            <!-- 下一页 -->
+                            <button @click="changePage(currentPage + 1)"
+                                    :disabled="currentPage === totalPages"
+                                    :class="currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-600'"
+                                    class="px-3 py-1 rounded text-sm text-white bg-gray-700 transition-colors">
+                                下一页 →
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Toast Notification System
+        function showToast(message, type = 'info', duration = 4000, replace = true) {
+            const container = document.getElementById('toast-container');
+
+            // 清除旧的Toast通知（避免堆积）
+            if (replace) {
+                const oldToasts = container.querySelectorAll('.toast-notification');
+                oldToasts.forEach(oldToast => {
+                    oldToast.classList.add('translate-x-full', 'opacity-0');
+                    setTimeout(() => oldToast.remove(), 300);
+                });
+            }
+
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification transform transition-all duration-300 ease-out translate-x-full';
+
+            // Icon and color based on type
+            const config = {
+                success: { icon: '✅', bg: 'bg-green-700', border: 'border-green-600' },
+                error: { icon: '❌', bg: 'bg-red-700', border: 'border-red-600' },
+                warning: { icon: '⚠️', bg: 'bg-yellow-700', border: 'border-yellow-600' },
+                info: { icon: 'ℹ️', bg: 'bg-blue-700', border: 'border-blue-600' }
+            };
+
+            const { icon, bg, border } = config[type] || config.info;
+
+            toast.innerHTML = `
+                <div class="${bg} ${border} border-l-4 rounded-lg shadow-lg p-4 min-w-80 max-w-md flex items-start gap-3">
+                    <div class="text-2xl flex-shrink-0">${icon}</div>
+                    <div class="flex-1 text-white text-sm whitespace-pre-line">${message}</div>
+                    <button onclick="this.parentElement.parentElement.remove()"
+                            class="text-white hover:text-gray-200 text-xl leading-none flex-shrink-0">×</button>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+                toast.classList.add('translate-x-0');
+            }, 10);
+
+            // Auto remove
+            setTimeout(() => {
+                toast.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+
         function dashboard() {
             return {
                 currentTab: 'strategies',
@@ -449,14 +972,102 @@
                     total_profit: 0
                 },
                 strategies: [],
+                accounts: [],
                 signals: [],
                 trades: [],
+                filteredTrades: [],
+                expandedAccounts: {},
+                platformInfo: null,
+
+                // 策略筛选器
+                statusFilter: 'all',
+                scoreFilter: 0,
+
+                // 交易记录筛选器
+                tradeFilters: {
+                    account_id: '',
+                    strategy_id: '',
+                    strategy_status: 'all'  // all/active/candidate/archived
+                },
+
+                // 分页配置
+                currentPage: 1,
+                pageSize: 20,  // 默认每页20条
 
                 async init() {
+                    // 读取URL参数
+                    this.readUrlParams();
+
                     await this.loadStats();
                     await this.loadStrategies();
+                    await this.loadAccounts();
                     await this.loadSignals();
                     await this.loadTrades();
+                },
+
+                // 读取URL参数
+                readUrlParams() {
+                    const urlParams = new URLSearchParams(window.location.search);
+
+                    // 读取tab参数
+                    const tab = urlParams.get('tab');
+                    if (tab) {
+                        this.currentTab = tab;
+                    }
+
+                    // 读取交易记录筛选参数
+                    const accountId = urlParams.get('account_id');
+                    const strategyId = urlParams.get('strategy_id');
+                    const strategyStatus = urlParams.get('strategy_status');
+
+                    if (accountId) {
+                        this.tradeFilters.account_id = accountId;
+                    }
+                    if (strategyId) {
+                        this.tradeFilters.strategy_id = strategyId;
+                    }
+                    if (strategyStatus) {
+                        this.tradeFilters.strategy_status = strategyStatus;
+                    }
+                },
+
+                // 更新URL参数（不刷新页面）
+                updateUrlParams() {
+                    const params = new URLSearchParams();
+                    params.set('tab', this.currentTab);
+
+                    if (this.tradeFilters.account_id) {
+                        params.set('account_id', this.tradeFilters.account_id);
+                    }
+                    if (this.tradeFilters.strategy_id) {
+                        params.set('strategy_id', this.tradeFilters.strategy_id);
+                    }
+                    if (this.tradeFilters.strategy_status && this.tradeFilters.strategy_status !== 'all') {
+                        params.set('strategy_status', this.tradeFilters.strategy_status);
+                    }
+
+                    const newUrl = `${window.location.pathname}?${params.toString()}`;
+                    window.history.pushState({}, '', newUrl);
+                },
+
+                // 计算筛选后的策略列表
+                get filteredStrategies() {
+                    let filtered = this.strategies;
+
+                    // 按状态筛选
+                    if (this.statusFilter !== 'all') {
+                        filtered = filtered.filter(s => s.status === this.statusFilter);
+                    }
+
+                    // 按推荐度筛选
+                    if (this.scoreFilter > 0) {
+                        filtered = filtered.filter(s => {
+                            const score = s.performance?.recommendation_summary?.recommendation_score || 0;
+                            return score >= this.scoreFilter;
+                        });
+                    }
+
+                    return filtered;
                 },
 
                 async loadStats() {
@@ -480,6 +1091,169 @@
                     const response = await fetch('/api/trades');
                     const data = await response.json();
                     this.trades = data.trades;
+
+                    // 如果有URL参数中的筛选条件，应用筛选；否则显示全部
+                    if (this.tradeFilters.account_id || this.tradeFilters.strategy_id || this.tradeFilters.strategy_status !== 'all') {
+                        this.applyTradeFilters();
+                    } else {
+                        this.filteredTrades = this.trades;
+                    }
+                },
+
+                // 应用交易记录筛选
+                applyTradeFilters() {
+                    let filtered = this.trades;
+
+                    // 按账号ID筛选
+                    if (this.tradeFilters.account_id && this.tradeFilters.account_id.trim() !== '') {
+                        filtered = filtered.filter(t =>
+                            String(t.account_login || '').includes(this.tradeFilters.account_id.trim())
+                        );
+                    }
+
+                    // 按策略ID筛选（只有输入了才筛选，为空时显示所有）
+                    if (this.tradeFilters.strategy_id && this.tradeFilters.strategy_id.trim() !== '') {
+                        filtered = filtered.filter(t =>
+                            String(t.strategy_id || '').includes(this.tradeFilters.strategy_id.trim())
+                        );
+                    }
+
+                    // 按策略当前状态筛选
+                    if (this.tradeFilters.strategy_status !== 'all') {
+                        filtered = filtered.filter(t => {
+                            // 筛选指定状态的策略
+                            const status = this.getStrategyStatus(t.strategy_id);
+                            return status && status.toLowerCase() === this.tradeFilters.strategy_status;
+                        });
+                    }
+
+                    this.filteredTrades = filtered;
+                    this.currentPage = 1;  // 重置到第一页
+                    this.updateUrlParams();
+                },
+
+                // 计算总页数
+                get totalPages() {
+                    return Math.ceil(this.filteredTrades.length / this.pageSize);
+                },
+
+                // 计算筛选后的总盈亏
+                get filteredTotalProfit() {
+                    return this.filteredTrades.reduce((sum, trade) => {
+                        return sum + (parseFloat(trade.profit) || 0);
+                    }, 0);
+                },
+
+                // 计算分页后的数据
+                get paginatedTrades() {
+                    const start = (this.currentPage - 1) * this.pageSize;
+                    const end = start + this.pageSize;
+                    return this.filteredTrades.slice(start, end);
+                },
+
+                // 切换页码
+                changePage(page) {
+                    if (page < 1 || page > this.totalPages) return;
+                    this.currentPage = page;
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                },
+
+                // 切换每页数量
+                changePageSize(size) {
+                    this.pageSize = size;
+                    this.currentPage = 1;  // 重置到第一页
+                },
+
+                // 清除交易记录筛选
+                clearTradeFilters() {
+                    // 清空筛选条件
+                    this.tradeFilters.account_id = '';
+                    this.tradeFilters.strategy_id = '';
+                    this.tradeFilters.strategy_status = 'all';
+
+                    // 显示所有本地数据
+                    this.filteredTrades = [...this.trades];
+
+                    // 重置到第一页
+                    this.currentPage = 1;
+
+                    // 更新URL（清除筛选参数）
+                    this.updateUrlParams();
+
+                    showToast('✅ 已清除筛选', 'success', 2000);
+                },
+
+                async loadAccounts() {
+                    try {
+                        const response = await fetch('http://localhost:8002/accounts-db');
+                        const result = await response.json();
+
+                        if (result.code === 0) {
+                            this.accounts = result.data;
+                            this.platformInfo = result.platform;
+
+                            // 显示平台和同步状态提示
+                            if (this.platformInfo) {
+                                if (this.platformInfo.is_windows && this.platformInfo.sync_status) {
+                                    const status = this.platformInfo.sync_status;
+                                    if (status.success) {
+                                        console.log(`✅ ${status.message}`);
+                                        console.log(`   余额: ${status.balance}, 净值: ${status.equity}`);
+                                    } else {
+                                        console.warn(`⚠️ ${status.message}`);
+                                    }
+                                } else if (this.platformInfo.is_mock) {
+                                    console.warn('⚠️ 当前为Mock模式（macOS/Linux），显示模拟数据');
+                                    console.warn('   提示：真实MT5数据需要在Windows系统上运行');
+                                }
+                            }
+
+                            // 为每个账户加载详细信息（策略配比和盈利统计）
+                            for (let account of this.accounts) {
+                                await this.loadAccountDetails(account);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('加载账户失败:', error);
+                    }
+                },
+
+                async loadAccountDetails(account) {
+                    try {
+                        // 加载策略配比
+                        const detailResponse = await fetch(`http://localhost:8002/accounts-db/${account.id}`);
+                        const detailResult = await detailResponse.json();
+
+                        if (detailResult.code === 0) {
+                            account.allocations = detailResult.data.allocations;
+                        }
+
+                        // 加载盈利统计
+                        const summaryResponse = await fetch(`http://localhost:8002/accounts-db/${account.id}/summary`);
+                        const summaryResult = await summaryResponse.json();
+
+                        if (summaryResult.code === 0) {
+                            account.summary = summaryResult.data;
+                        }
+                    } catch (error) {
+                        console.error(`加载账户 ${account.id} 详情失败:`, error);
+                    }
+                },
+
+                toggleAccountExpand(accountId) {
+                    this.expandedAccounts[accountId] = !this.expandedAccounts[accountId];
+                },
+
+                viewAccountTrades(accountLogin) {
+                    // 切换到交易记录Tab
+                    this.currentTab = 'trades';
+
+                    // 设置账号筛选
+                    this.tradeFilters.account_id = String(accountLogin);
+                    this.applyTradeFilters();
+
+                    // 平滑滚动到顶部
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 },
 
                 async refresh() {
@@ -498,13 +1272,13 @@
                         // Strategy服务返回的是 strategy_ids，不是 strategies
                         const count = result.strategy_ids?.length || 0;
                         if (result.success) {
-                            alert(`策略生成成功！\n${result.message}\n策略ID: ${result.strategy_ids?.join(', ')}`);
+                            showToast(`策略生成成功！\n${result.message}\n策略ID: ${result.strategy_ids?.join(', ')}`, 'success');
                         } else {
-                            alert(`生成失败：${result.message}`);
+                            showToast(`生成失败：${result.message}`, 'error');
                         }
                         await this.refresh();
                     } catch (error) {
-                        alert(`生成失败：${error.message}`);
+                        showToast(`生成失败：${error.message}`, 'error');
                     }
                 },
 
@@ -518,13 +1292,13 @@
                         const result = await response.json();
 
                         if (result.success) {
-                            alert(`信号生成成功！\n${result.message}\n信号ID: ${result.signal_id}`);
+                            showToast(`信号生成成功！\n${result.message}\n信号ID: ${result.signal_id}`, 'success');
                         } else {
-                            alert(`生成失败：${result.message || 'Unknown error'}`);
+                            showToast(`生成失败：${result.message || 'Unknown error'}`, 'error');
                         }
                         await this.refresh();
                     } catch (error) {
-                        alert(`生成失败：${error.message}`);
+                        showToast(`生成失败：${error.message}`, 'error');
                     }
                 },
 
@@ -540,14 +1314,191 @@
                         const result = await response.json();
 
                         if (result.success) {
-                            alert(`订单执行成功！\n${result.message}\nTicket: ${result.ticket}\n交易ID: ${result.trade_id}`);
+                            showToast(`订单执行成功！\n${result.message}\nTicket: ${result.ticket}\n交易ID: ${result.trade_id}`, 'success');
                         } else {
-                            alert(`执行失败：${result.message || 'Unknown error'}`);
+                            showToast(`执行失败：${result.message || 'Unknown error'}`, 'error');
                         }
                         await this.refresh();
                     } catch (error) {
-                        alert(`执行失败：${error.message}`);
+                        showToast(`执行失败：${error.message}`, 'error');
                     }
+                },
+
+                // 激活策略
+                async activateStrategy(strategyId) {
+                    if (!confirm(`确定要激活策略 ${strategyId} 吗？`)) return;
+
+                    try {
+                        const response = await fetch(`/api/registration/activate/${strategyId}`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({force: false})
+                        });
+                        const result = await response.json();
+
+                        if (result.success) {
+                            showToast(`✅ ${result.message}`, 'success');
+                            await this.refresh();
+                        } else {
+                            showToast(`❌ ${result.message}`, 'error');
+                        }
+                    } catch (error) {
+                        showToast(`激活失败：${error.message}`, 'error');
+                    }
+                },
+
+                // 停用策略
+                async deactivateStrategy(strategyId) {
+                    if (!confirm(`确定要停用策略 ${strategyId} 吗？`)) return;
+
+                    try {
+                        const response = await fetch(`/api/registration/deactivate/${strategyId}`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({reason: '手动停用'})
+                        });
+                        const result = await response.json();
+
+                        if (result.success) {
+                            showToast(`⏸️ ${result.message}`, 'success');
+                            await this.refresh();
+                        } else {
+                            showToast(`❌ ${result.message}`, 'error');
+                        }
+                    } catch (error) {
+                        showToast(`停用失败：${error.message}`, 'error');
+                    }
+                },
+
+                // 评估策略
+                async evaluateStrategy(strategyId) {
+                    try {
+                        const response = await fetch(`/api/registration/evaluate/${strategyId}`);
+                        const result = await response.json();
+
+                        let message = `策略评估结果：\n\n`;
+                        message += `符合激活条件: ${result.qualified ? '✅ 是' : '❌ 否'}\n`;
+                        message += `质量分数: ${result.quality_score.toFixed(1)}\n`;
+                        message += `稳定性分数: ${result.stability_score.toFixed(2)}\n`;
+                        message += `核心指标通过: ${result.core_passed}/${result.core_required}\n`;
+                        message += `回测品种: ${result.backtested_symbol}\n\n`;
+                        message += `详细原因:\n${result.reasons.join('\n')}`;
+
+                        showToast(message, 'info', 6000);
+                    } catch (error) {
+                        showToast(`评估失败：${error.message}`, 'error');
+                    }
+                },
+
+                // 批量评估并激活
+                async batchEvaluate() {
+                    if (!confirm('确定要批量评估所有候选策略吗？\n符合条件的策略将自动激活。')) return;
+
+                    try {
+                        const response = await fetch('/api/registration/batch-evaluate', {
+                            method: 'POST'
+                        });
+                        const result = await response.json();
+
+                        let message = `批量评估完成！\n\n`;
+                        message += `评估策略数: ${result.evaluated}\n`;
+                        message += `激活策略数: ${result.activated}\n\n`;
+
+                        if (result.activated > 0) {
+                            message += `以下策略已激活:\n`;
+                            result.results.filter(r => r.activated).forEach(r => {
+                                message += `✅ ${r.strategy_name} (分数: ${r.evaluation.quality_score.toFixed(1)})\n`;
+                            });
+                        }
+
+                        showToast(message, 'success', 6000);
+                        await this.refresh();
+                    } catch (error) {
+                        showToast(`批量评估失败：${error.message}`, 'error');
+                    }
+                },
+
+                // 归档策略
+                async archiveStrategy(strategyId) {
+                    if (!confirm(`确定要归档策略 ${strategyId} 吗？\n\n⚠️ 只有候选状态的策略可以归档。\n归档后可通过"恢复到候选"重新激活。`)) return;
+
+                    const reason = prompt('请输入归档原因（可选）:');
+
+                    try {
+                        const response = await fetch(`/api/registration/archive/${strategyId}`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({reason: reason || '手动归档'})
+                        });
+                        const result = await response.json();
+
+                        if (result.success) {
+                            showToast(`📦 ${result.message}`, 'success');
+                            await this.refresh();
+                        } else {
+                            showToast(`❌ ${result.message}`, 'error');
+                        }
+                    } catch (error) {
+                        showToast(`归档失败：${error.message}`, 'error');
+                    }
+                },
+
+                // 恢复归档的策略到候选状态
+                async restoreStrategy(strategyId) {
+                    if (!confirm(`确定要恢复策略 ${strategyId} 到候选状态吗？\n\n恢复后可以重新激活该策略。`)) return;
+
+                    try {
+                        const response = await fetch(`/api/registration/restore/${strategyId}`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'}
+                        });
+                        const result = await response.json();
+
+                        if (result.success) {
+                            showToast(`🔄 ${result.message}`, 'success');
+                            await this.refresh();
+                        } else {
+                            showToast(`❌ ${result.message}`, 'error');
+                        }
+                    } catch (error) {
+                        showToast(`恢复失败：${error.message}`, 'error');
+                    }
+                },
+
+                // 永久删除策略
+                async deleteStrategy(strategyId) {
+                    if (!confirm(`⚠️ 警告：确定要永久删除策略 ${strategyId} 吗？\n\n此操作不可逆，将从数据库中彻底删除该策略！`)) return;
+
+                    // 二次确认
+                    const confirmText = prompt('请输入 "DELETE" 确认删除:');
+                    if (confirmText !== 'DELETE') {
+                        showToast('删除操作已取消', 'info');
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`/api/registration/delete/${strategyId}`, {
+                            method: 'DELETE',
+                            headers: {'Content-Type': 'application/json'}
+                        });
+                        const result = await response.json();
+
+                        if (result.success) {
+                            showToast(`🗑️ ${result.message}`, 'success');
+                            await this.refresh();
+                        } else {
+                            showToast(`❌ ${result.message}`, 'error');
+                        }
+                    } catch (error) {
+                        showToast(`删除失败：${error.message}`, 'error');
+                    }
+                },
+
+                getStrategyStatus(strategyId) {
+                    // 根据strategy_id查找策略的注册状态
+                    if (!strategyId) return null;
+                    const strategy = this.strategies.find(s => s.id === strategyId);
+                    return strategy ? strategy.status : null;
                 },
 
                 formatDate(dateString) {

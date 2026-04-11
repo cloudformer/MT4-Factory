@@ -59,8 +59,16 @@ class MT5Interface(ABC):
     """MT5接口抽象类"""
 
     @abstractmethod
-    def initialize(self) -> bool:
-        """初始化连接"""
+    def initialize(self, login: Optional[int] = None, password: Optional[str] = None,
+                   server: Optional[str] = None) -> bool:
+        """
+        初始化连接
+
+        Args:
+            login: 账号（可选，如果提供则自动登录）
+            password: 密码（可选）
+            server: 服务器（可选）
+        """
         pass
 
     @abstractmethod

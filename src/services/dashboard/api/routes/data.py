@@ -8,6 +8,7 @@ from src.common.database.connection import db
 from src.common.models.strategy import Strategy
 from src.common.models.signal import Signal
 from src.common.models.trade import Trade
+from src.common.models.account import Account
 
 router = APIRouter(prefix="/api", tags=["data"])
 
@@ -97,11 +98,23 @@ def get_signals(session: Session = Depends(get_db_session)):
 
 @router.get("/trades")
 def get_trades(session: Session = Depends(get_db_session)):
-    """获取所有交易"""
-    trades = session.query(Trade).order_by(Trade.open_time.desc()).limit(50).all()
-    return {
-        "trades": [t.to_dict() for t in trades]
-    }
+    """获取所有交易（最多返回50条）"""
+    # Join with Account to get login info
+    trades_with_accounts = (
+        session.query(Trade, Account)
+        .outerjoin(Account, Trade.account_id == Account.id)
+        .order_by(Trade.open_time.desc())
+        .limit(50)  # ⚠️ 只返回最新50条
+        .all()
+    )
+
+    trades_list = []
+    for trade, account in trades_with_accounts:
+        trade_dict = trade.to_dict()
+        trade_dict['account_login'] = account.login if account else None
+        trades_list.append(trade_dict)
+
+    return {"trades": trades_list}
 
 
 # ========== 操作接口 ==========

@@ -4,6 +4,7 @@ import platform
 from .interface import MT5Interface, OrderRequest, OrderResult, AccountInfo, TickInfo
 from .mock_client import MockMT5Client
 from .real_client import RealMT5Client
+from .connection import MT5ConnectionManager, mt5_manager
 
 
 def get_mt5_client() -> MT5Interface:
@@ -15,6 +16,8 @@ def get_mt5_client() -> MT5Interface:
 
     Returns:
         MT5Interface: MT5客户端实例
+
+    Note: 推荐使用 mt5_manager 全局单例
     """
     system = platform.system()
 
@@ -31,6 +34,8 @@ __all__ = [
     'MT5Interface',
     'MockMT5Client',
     'RealMT5Client',
+    'MT5ConnectionManager',
+    'mt5_manager',
     'get_mt5_client',
     'OrderRequest',
     'OrderResult',

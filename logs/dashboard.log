@@ -1,4 +1,24 @@
-INFO:     Started server process [72832]
+INFO:     Started server process [88147]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8004 (Press CTRL+C to quit)
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     127.0.0.1:51796 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51796 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:51796 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51797 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51797 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51797 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51797 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51796 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51797 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51796 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52136 - "GET /?tab=trades&account_id=5049130509&strategy_status=archived HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52136 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:52136 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52137 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52137 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52136 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52136 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52137 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52136 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52137 - "GET /api/trades HTTP/1.1" 200 OK

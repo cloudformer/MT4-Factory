@@ -1,0 +1,129 @@
+app:
+  name: "Evo Trade System"
+  version: "1.0.0"
+  environment: "production"
+
+database:
+  url: "postgresql://user:password@localhost:5432/evo_trade"
+  echo: false
+
+services:
+  # 策略层：策略生成、风控计算、信号生成
+  strategy:
+    host: "0.0.0.0"
+    port: 8001
+    workers: 4
+
+  # 编排层：策略注册、调度决策、仓位管理、资金分配
+  orchestrator:
+    host: "0.0.0.0"
+    port: 8002
+    workers: 4
+
+  # 执行层：订单执行、MT5对接、持仓查询、账户同步
+  execution:
+    host: "0.0.0.0"
+    port: 8003
+    workers: 4
+
+  # API层：Web界面、数据展示、操作控制
+  dashboard:
+    host: "0.0.0.0"
+    port: 8000
+    workers: 4
+
+# 服务URL配置 - 生产环境示例（可使用域名或路径前缀）
+service_urls:
+  # 方式1: 独立域名
+  # strategy: "https://strategy.evotrade.com"
+  # orchestrator: "https://orchestrator.evotrade.com"
+  # execution: "https://execution.evotrade.com"
+  # dashboard: "https://dashboard.evotrade.com"
+
+  # 方式2: API网关 + 路径前缀
+  # strategy: "https://api.evotrade.com/strategy"
+  # orchestrator: "https://api.evotrade.com/orchestrator"
+  # execution: "https://api.evotrade.com/execution"
+  # dashboard: "https://api.evotrade.com/dashboard"
+
+  # 方式3: 内网IP（Kubernetes/Docker网络）
+  strategy: "http://strategy-service:8001"
+  orchestrator: "http://orchestrator-service:8002"
+  execution: "http://execution-service:8003"
+  dashboard: "http://dashboard-service:8000"
+
+mt5:
+  company: ${MT5_COMPANY}              # 例如: "MetaQuotes Ltd."
+  server: ${MT5_SERVER}                # 例如: "MetaQuotes-Demo"
+  login: ${MT5_LOGIN}                  # 账号
+  password: ${MT5_PASSWORD}            # 主密码（交易模式）
+  investor_password: ${MT5_INVESTOR}   # 投资者密码（只读模式）
+
+  # MT5终端路径（可选，Windows生产环境）
+  path: ""  # 例如: "C:/Program Files/MetaTrader 5/terminal64.exe"
+  timeout: 60000  # 连接超时（毫秒）
+  portable: false  # 是否使用便携模式
+
+  # 代理设置（可选）
+  proxy:
+    enabled: ${MT5_PROXY_ENABLED:false}
+    host: ${MT5_PROXY_HOST:}      # 例如: "proxy.example.com"
+    port: ${MT5_PROXY_PORT:0}     # 例如: 8888
+    type: ${MT5_PROXY_TYPE:HTTP}  # HTTP/HTTPS/SOCKS5
+
+# Orchestrator配置 - 策略编排和资金管理
+orchestrator:
+  # 策略注册服务 - 策略激活标准
+  activation:
+    min_recommendation_score: 70     # 生产环境要求更高
+    min_total_return: 0.05
+    min_sharpe_ratio: 0.80
+    max_drawdown: 0.10
+    min_win_rate: 0.40
+    min_profit_factor: 1.8
+    min_stability_score: 0.60
+
+  # 资金管理配置
+  portfolio:
+    initial_balance: 100000.0
+    max_total_exposure: 0.25         # 生产环境更保守
+    max_strategy_allocation: 0.08
+    risk_per_trade: 0.015
+
+  # 配比策略
+  allocation:
+    mode: "conservative"
+    max_strategies: 8
+    rebalance_interval_hours: 12
+
+  # 风险管理
+  risk:
+    max_daily_loss: 0.03             # 更严格的风控
+    max_concurrent_trades: 15
+    max_correlation: 0.60
+    max_strategy_drawdown: 0.12
+    max_strategy_exposure: 0.10
+
+# 策略评估配置
+strategy_evaluation:
+  enabled_evaluators:
+    synthetic: false
+    historical: true      # 生产环境优先使用历史数据
+    realtime: true
+
+  weights:
+    historical: 0.70
+    synthetic: 0.10
+    realtime: 0.20
+
+  parameters:
+    initial_balance: 100000.0
+    synthetic_bars: 5000
+    historical_bars: 10000
+    realtime_duration_minutes: 1440  # 24小时实时测试
+    symbol: "EURUSD"
+
+logging:
+  level: "WARNING"
+  format: "json"
+  file: "/var/log/evotrade/app.log"

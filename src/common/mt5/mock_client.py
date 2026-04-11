@@ -16,7 +16,15 @@ from .interface import (
 class MockMT5Client(MT5Interface):
     """Mock MT5 实现 - 用于 macOS 开发测试"""
 
-    def __init__(self):
+    def __init__(self, path: Optional[str] = None, timeout: int = 60000, portable: bool = False):
+        """
+        初始化Mock客户端
+
+        Args:
+            path: MT5终端路径（Mock中不使用）
+            timeout: 连接超时时间（Mock中不使用）
+            portable: 是否使用便携模式（Mock中不使用）
+        """
         self._initialized = False
         self._logged_in = False
         self._account = None
@@ -24,9 +32,24 @@ class MockMT5Client(MT5Interface):
         self._last_error = (0, "No error")
         self._order_counter = 1000
 
-    def initialize(self) -> bool:
+    def initialize(self, login: Optional[int] = None, password: Optional[str] = None,
+                   server: Optional[str] = None) -> bool:
+        """
+        初始化连接（Mock）
+
+        Args:
+            login: 账号（可选，如果提供则自动登录）
+            password: 密码（可选）
+            server: 服务器（可选）
+        """
         print("[MockMT5] 初始化连接（模拟）")
         self._initialized = True
+
+        # 如果提供了登录信息，自动登录
+        if login and password and server:
+            print(f"[MockMT5] 自动登录: {login}@{server}")
+            return self.login(login, password, server)
+
         return True
 
     def shutdown(self) -> None:
@@ -90,8 +113,8 @@ class MockMT5Client(MT5Interface):
         if not self._logged_in:
             return pd.DataFrame()
 
-        # 生成模拟K线
-        dates = pd.date_range(end=datetime.now(), periods=count, freq='H')
+        # 生成模拟K线 (使用小写h避免pandas警告)
+        dates = pd.date_range(end=datetime.now(), periods=count, freq='h')
 
         # 基础价格
         base_price = 1.0850 if symbol == "EURUSD" else 1.2650

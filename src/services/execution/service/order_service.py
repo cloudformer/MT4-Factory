@@ -4,7 +4,7 @@ from datetime import datetime
 from src.common.models.signal import Signal
 from src.common.models.trade import Trade
 from src.common.utils.id_generator import generate_trade_id
-from src.common.mt5 import get_mt5_client, OrderRequest
+from src.common.mt5 import mt5_manager, OrderRequest
 from ..repository.trade_repo import TradeRepository
 
 
@@ -13,7 +13,8 @@ class OrderExecutionService:
 
     def __init__(self, trade_repo: TradeRepository):
         self.trade_repo = trade_repo
-        self.mt5_client = get_mt5_client()
+        # 使用全局MT5连接管理器
+        self.mt5_client = mt5_manager.get_client()
 
     def execute_signal(self, signal: Signal) -> Trade:
         """
@@ -25,9 +26,9 @@ class OrderExecutionService:
         Returns:
             Trade对象
         """
-        # 1. 初始化MT5
-        if not self.mt5_client.initialize():
-            raise RuntimeError("MT5初始化失败")
+        # 1. 检查MT5连接
+        if not mt5_manager.is_connected():
+            raise RuntimeError("MT5未连接，请检查连接状态")
 
         # 2. 构建订单请求
         order_request = OrderRequest(

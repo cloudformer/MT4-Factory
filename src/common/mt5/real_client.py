@@ -15,20 +15,62 @@ from .interface import (
 class RealMT5Client(MT5Interface):
     """真实 MT5 实现 - 用于 Windows 生产环境"""
 
-    def __init__(self):
+    def __init__(self, path: Optional[str] = None, timeout: int = 60000, portable: bool = False):
+        """
+        初始化MT5客户端
+
+        Args:
+            path: MT5终端路径（可选）
+            timeout: 连接超时时间（毫秒）
+            portable: 是否使用便携模式
+        """
         try:
             import MetaTrader5 as mt5
             self._mt5 = mt5
+            self._path = path
+            self._timeout = timeout
+            self._portable = portable
         except ImportError:
             raise RuntimeError("MetaTrader5 库只能在 Windows 上使用")
 
-    def initialize(self) -> bool:
-        return self._mt5.initialize()
+    def initialize(self, login: Optional[int] = None, password: Optional[str] = None,
+                   server: Optional[str] = None) -> bool:
+        """
+        初始化MT5连接
+
+        Args:
+            login: 账号（可选，如果提供则自动登录）
+            password: 密码（可选）
+            server: 服务器（可选）
+        """
+        init_kwargs = {
+            'timeout': self._timeout,
+            'portable': self._portable
+        }
+
+        if self._path:
+            init_kwargs['path'] = self._path
+
+        # 如果提供了登录信息，直接初始化并登录
+        if login and password and server:
+            init_kwargs['login'] = login
+            init_kwargs['password'] = password
+            init_kwargs['server'] = server
+
+        return self._mt5.initialize(**init_kwargs)
 
     def shutdown(self) -> None:
         self._mt5.shutdown()
 
     def login(self, login: int, password: str, server: str) -> bool:
+        """
+        登录MT5账户
+
+        Args:
+            login: 账号
+            password: 密码（可以是主密码或投资者密码）
+            server: 服务器名称
+        """
         return self._mt5.login(login, password=password, server=server)
 
     def account_info(self) -> Optional[AccountInfo]:

@@ -11,8 +11,9 @@ class Trade(Base):
     __tablename__ = "trades"
 
     id = Column(String(32), primary_key=True)
+    account_id = Column(String(32), ForeignKey('accounts.id'), nullable=True)
     signal_id = Column(String(32), ForeignKey('signals.id'), nullable=True)
-    strategy_id = Column(String(32), ForeignKey('strategies.id'), nullable=False)
+    strategy_id = Column(String(32), ForeignKey('strategies.id'), nullable=True)  # 允许为空（手动交易）
     ticket = Column(BigInteger, nullable=True)
     symbol = Column(String(10), nullable=False)
     direction = Column(Enum(Direction), nullable=False)
@@ -31,6 +32,7 @@ class Trade(Base):
         """转换为字典"""
         return {
             "id": self.id,
+            "account_id": self.account_id,
             "signal_id": self.signal_id,
             "strategy_id": self.strategy_id,
             "ticket": self.ticket,

@@ -6,7 +6,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 
-from .routes import data
+from .routes import data, registration
 
 # 创建FastAPI应用
 app = FastAPI(
@@ -26,6 +26,7 @@ app.add_middleware(
 
 # 注册API路由
 app.include_router(data.router)
+app.include_router(registration.router, prefix="/api")  # 策略注册管理
 
 # 模板目录
 templates_dir = Path(__file__).parent.parent / "templates"
