@@ -24,8 +24,8 @@ class AccountAllocation(Base):
     is_active = Column(Boolean, default=True)  # 是否启用此配比
 
     # 时间戳
-    created_at = Column(DateTime, default=datetime.now, nullable=False)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # 确保同一账户的同一策略只有一条配比记录
     __table_args__ = (

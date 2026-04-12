@@ -1,0 +1,199 @@
+version: '3.8'
+
+services:
+  # ========== PostgreSQL数据库 ==========
+  postgres:
+    image: postgres:16-alpine
+    container_name: mt4-factory-postgres
+    environment:
+      POSTGRES_DB: evo_trade
+      POSTGRES_USER: evo_trade_user
+      POSTGRES_PASSWORD: evo_trade_pass_dev_2024
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evo_trade_user -d evo_trade"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - mt4-factory-net
+
+  # ========== Dashboard服务（前端UI）==========
+  # 环境：Mac, Windows, Cloud
+  dashboard:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dashboard
+    container_name: mt4-factory-dashboard
+    environment:
+      - ENV=${ENV:-windows}           # 默认windows，通过环境变量覆盖
+      - CONFIG_PATH=config/${ENV:-windows}.yaml
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src                # 源代码（开发环境：实时加载）
+      - ./logs:/app/logs              # 日志目录
+      - ./config:/app/config:ro       # 配置目录（只读）
+    restart: unless-stopped
+    networks:
+      - mt4-factory-net
+    profiles:
+      - dev                           # Windows开发环境
+      - production                    # Cloud生产环境
+
+  # ========== Orchestrator服务（策略编排）==========
+  # 环境：Windows, Cloud
+  orchestrator:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.orchestrator
+    container_name: mt4-factory-orchestrator
+    environment:
+      - ENV=${ENV:-windows}
+      - CONFIG_PATH=config/${ENV:-windows}.yaml
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src                # 源代码（开发环境：实时加载）
+      - ./logs:/app/logs              # 日志目录
+      - ./config:/app/config:ro       # 配置目录（只读）
+    restart: unless-stopped
+    networks:
+      - mt4-factory-net
+    profiles:
+      - dev                           # Windows开发环境
+      - production                    # Cloud生产环境
+
+  # ========== Strategy服务（策略生成）==========
+  # 环境：Windows, Cloud
+  strategy:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.strategy
+    container_name: mt4-factory-strategy
+    environment:
+      - ENV=${ENV:-windows}
+      - CONFIG_PATH=config/${ENV:-windows}.yaml
+      - OPENAI_API_KEY=${OPENAI_API_KEY}      # Windows使用
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}  # Cloud使用
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src                # 源代码（开发环境：实时加载）
+      - ./logs:/app/logs              # 日志目录
+      - ./config:/app/config:ro       # 配置目录（只读）
+    restart: unless-stopped
+    networks:
+      - mt4-factory-net
+    profiles:
+      - dev                           # Windows开发环境
+      - production                    # Cloud生产环境
+
+  # ========== Validator服务（策略验证）==========
+  # 环境：Windows, Cloud
+  validator:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.validator
+    container_name: mt4-factory-validator
+    environment:
+      - ENV=${ENV:-windows}
+      - CONFIG_PATH=config/${ENV:-windows}.yaml
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src                # 源代码（开发环境：实时加载）
+      - ./logs:/app/logs              # 日志目录
+      - ./config:/app/config:ro       # 配置目录（只读）
+    restart: unless-stopped
+    networks:
+      - mt4-factory-net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # 访问宿主机MT5
+    profiles:
+      - dev                           # Windows开发环境
+      - production                    # Cloud生产环境
+
+  # ========== Execution服务（交易执行）==========
+  # Windows: 使用Demo MT5（安全测试）
+  # Cloud: 使用Real MT5（真实交易）⚠️
+  execution:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.execution
+    container_name: mt4-factory-execution
+    environment:
+      - ENV=${ENV:-windows}           # windows或production
+      - CONFIG_PATH=config/${ENV:-windows}.yaml
+      # Windows环境使用Demo账户（从config读取）
+      # Cloud环境使用Real账户（从环境变量读取）
+      - MT5_REAL_PASSWORD=${MT5_REAL_PASSWORD:-}  # Cloud需要设置
+      - MT5_REAL_API_KEY=${MT5_REAL_API_KEY:-}    # Cloud需要设置
+    ports:
+      - "8003:8003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src                # 源代码（开发环境：实时加载）
+      - ./logs:/app/logs              # 日志目录
+      - ./config:/app/config:ro       # 配置目录（只读）
+    restart: unless-stopped
+    networks:
+      - mt4-factory-net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # 访问宿主机MT5
+    profiles:
+      - dev                           # Windows开发环境（使用Demo）
+      - production                    # Cloud生产环境（使用Real）
+
+  # ========== pgAdmin（数据库管理界面）==========
+  # 可选工具
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: mt4-factory-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@mt4factory.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - mt4-factory-net
+    profiles:
+      - tools                         # 可选启动
+
+volumes:
+  postgres_data:
+    name: mt4-factory-postgres-data
+  pgadmin_data:
+    name: mt4-factory-pgadmin-data
+
+networks:
+  mt4-factory-net:
+    name: mt4-factory-network
+    driver: bridge

@@ -32,7 +32,7 @@ class Signal(Base):
     sl = Column(DECIMAL(10, 5), nullable=True)
     tp = Column(DECIMAL(10, 5), nullable=True)
     status = Column(Enum(SignalStatus), default=SignalStatus.PENDING, nullable=False)
-    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     def __repr__(self):
         return f"<Signal(id={self.id}, symbol={self.symbol}, direction={self.direction}, status={self.status})>"

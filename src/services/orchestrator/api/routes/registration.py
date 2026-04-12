@@ -146,7 +146,8 @@ def activate_strategy(strategy_id: str, request: ActivateRequest = ActivateReque
     )
 
     if not result['success']:
-        raise HTTPException(status_code=400, detail=result['message'])
+        # Include full result (with evaluation details) in error response
+        raise HTTPException(status_code=400, detail=result)
 
     return OperationResponse(**result)
 

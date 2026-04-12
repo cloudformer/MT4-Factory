@@ -5,8 +5,10 @@ pydantic==2.6.0
 pydantic-settings==2.1.0
 jinja2==3.1.2
 
-# Database (SQLite)
+# Database
 SQLAlchemy==2.0.25
+psycopg2-binary==2.9.9  # PostgreSQL driver (Windows/Cloud)
+# SQLite支持内置在Python中，无需额外依赖
 
 # Config & Utils
 pyyaml==6.0.1

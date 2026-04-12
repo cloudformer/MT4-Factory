@@ -23,7 +23,7 @@ class Trade(Base):
     profit = Column(DECIMAL(10, 2), nullable=True)
     open_time = Column(DateTime, nullable=True)
     close_time = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     def __repr__(self):
         return f"<Trade(id={self.id}, symbol={self.symbol}, ticket={self.ticket})>"

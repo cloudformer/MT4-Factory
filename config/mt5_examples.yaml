@@ -1,0 +1,183 @@
+# MT5连接配置示例
+
+# ========================================
+# 场景1：Windows本地直连MT5
+# ========================================
+# 用途：Windows开发机直接访问本地MT5
+# 特点：最快速度，零网络延迟
+
+mt5_local_windows:
+  host: "localhost"              # 本地地址（自动识别为本地模式）
+  port: 9090                     # 端口（本地模式不使用，但保留配置）
+  login: 5049130509              # MT5账号
+  password: "your_password"      # MT5密码
+  server: "MetaQuotes-Demo"      # MT5服务器
+  timeout: 10                    # 超时（秒）
+
+# ========================================
+# 场景2：容器访问宿主机MT5（Windows + Docker）
+# ========================================
+# 用途：
+#   - Validator容器访问宿主机MT5
+#   - Execution容器访问宿主机MT5
+# 特点：需要启动MT5 API Bridge
+
+mt5_container_to_host:
+  host: "host.docker.internal"   # Docker特殊地址（指向宿主机）
+  port: 9090                     # MT5 API Bridge端口
+  login: 5049130509
+  password: "your_password"
+  server: "MetaQuotes-Demo"
+  api_key: "demo_key_12345"      # 可选：API认证
+  timeout: 10
+
+# ========================================
+# 场景3：云端容器访问远程Windows VPS（生产）
+# ========================================
+# 用途：
+#   - Linux服务器上的Validator访问远程MT5
+#   - Linux服务器上的Execution访问远程MT5
+# 特点：真实生产环境
+
+mt5_remote_production:
+  host: "52.10.20.30"            # Windows VPS公网IP
+  port: 9090                     # MT5 API Bridge端口
+  login: 5049130509              # Demo账户（Validator用）
+  password: "demo_password"
+  server: "MetaQuotes-Demo"
+  api_key: "prod_validator_key_xxx"  # 生产密钥（强烈推荐）
+  timeout: 15                    # 远程稍长超时
+
+# ========================================
+# 场景4：真实交易账户（高安全）
+# ========================================
+# 用途：Execution服务执行真实订单
+# 特点：
+#   - 独立Windows VPS
+#   - 严格认证
+#   - 风控限制
+
+mt5_real_trading:
+  host: "52.10.20.40"            # 真实交易专用VPS
+  port: 9091                     # 独立端口
+  login: 8012345678              # 真实账户 ⚠️
+  password: "real_password"      # 真实密码 ⚠️
+  server: "ICMarkets-Live"       # 真实服务器
+  api_key: "prod_execution_key_STRONG_PASSWORD"  # 必须：强密钥
+  timeout: 20
+
+# ========================================
+# 场景5：开发环境（Mac/Linux + Mock）
+# ========================================
+# 用途：Mac开发，无MT5，使用Mock模式
+# 特点：不需要真实MT5，仅用于代码开发
+
+mt5_mock_dev:
+  # Mock模式不需要连接参数
+  # 直接使用 MockMT5Client()
+  # 或者配置指向不存在的地址（会fallback到Mock）
+  host: "mock"
+  port: 0
+
+# ========================================
+# 使用示例（Python代码）
+# ========================================
+
+# 示例1：从配置文件读取
+"""
+from src.common.mt5 import UnifiedMT5Client
+from src.common.config import settings
+
+mt5_config = settings.mt5  # 从config/windows.yaml或production.yaml读取
+
+client = UnifiedMT5Client(
+    host=mt5_config["host"],
+    port=mt5_config["port"],
+    login=mt5_config.get("login"),
+    password=mt5_config.get("password"),
+    server=mt5_config.get("server"),
+    api_key=mt5_config.get("api_key"),
+    timeout=mt5_config.get("timeout", 10)
+)
+
+# 初始化
+if client.initialize():
+    # 获取K线数据
+    bars = client.get_bars("EURUSD", "H1", 100)
+    print(bars)
+
+    # 关闭
+    client.shutdown()
+"""
+
+# 示例2：直接构造（本地）
+"""
+from src.common.mt5 import UnifiedMT5Client
+
+client = UnifiedMT5Client(
+    host="localhost",  # 本地Windows
+    login=5049130509,
+    password="password",
+    server="MetaQuotes-Demo"
+)
+
+client.initialize()
+bars = client.get_bars("EURUSD", "H1", 100)
+"""
+
+# 示例3：直接构造（远程）
+"""
+from src.common.mt5 import UnifiedMT5Client
+
+client = UnifiedMT5Client(
+    host="52.10.20.30",  # 远程VPS
+    port=9090,
+    api_key="your_api_key"
+)
+
+client.initialize()
+bars = client.get_bars("EURUSD", "H1", 100)
+"""
+
+# ========================================
+# Validator服务配置
+# ========================================
+
+validator_config:
+  enabled: true
+  concurrency: 20                    # 单个Validator实例并发数
+  schedule_interval: 3600            # 每小时执行（秒）
+  demo_account: "5049130509"
+  initial_balance: 100
+
+  # MT5连接（引用上面的配置）
+  mt5:
+    host: "host.docker.internal"     # 容器→宿主机
+    port: 9090
+    login: 5049130509
+    password: "your_password"
+    server: "MetaQuotes-Demo"
+    timeout: 10
+
+# ========================================
+# Execution服务配置
+# ========================================
+
+execution_config:
+  enabled: true
+
+  # MT5连接
+  mt5:
+    host: "52.10.20.40"              # 真实交易VPS
+    port: 9091
+    login: 8012345678
+    password: "real_password"
+    server: "ICMarkets-Live"
+    api_key: "prod_execution_key_xxx"
+    timeout: 20
+
+  # 风控限制
+  risk_limits:
+    max_order_size: 0.1              # 最大手数
+    max_daily_loss: 1000             # 每日最大亏损（USD）
+    allowed_symbols: ["EURUSD", "GBPUSD", "USDJPY"]

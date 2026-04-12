@@ -1,4 +1,4 @@
-"""MySQL 数据库连接管理"""
+"""数据库连接管理 - 支持PostgreSQL, MySQL, SQLite"""
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import QueuePool
@@ -20,21 +20,40 @@ class DatabaseConnection:
         """初始化数据库连接"""
         db_config = settings.database
 
-        # 检查是否使用URL模式（SQLite）
-        if 'url' in db_config:
-            db_url = db_config['url']
+        # 检查数据库类型
+        db_type = db_config.get('type', 'postgresql')
+
+        if db_type == 'sqlite':
+            # SQLite模式 - 使用sqlite_path或url
+            if 'url' in db_config:
+                db_url = db_config['url']
+            elif 'sqlite_path' in db_config:
+                sqlite_path = db_config['sqlite_path']
+                db_url = f"sqlite:///{sqlite_path}"
+            else:
+                db_url = "sqlite:///./data/evo_trade.db"  # 默认路径
+
             self._engine = create_engine(
                 db_url,
                 connect_args={"check_same_thread": False},
                 echo=db_config.get('echo', False)
             )
         else:
-            # MySQL配置模式
-            db_url = (
-                f"mysql+pymysql://{db_config['user']}:{db_config['password']}"
-                f"@{db_config['host']}:{db_config['port']}/{db_config['database']}"
-                f"?charset=utf8mb4"
-            )
+            # PostgreSQL/MySQL配置模式
+            if db_type == 'postgresql':
+                # PostgreSQL
+                db_url = (
+                    f"postgresql+psycopg2://{db_config['user']}:{db_config['password']}"
+                    f"@{db_config['host']}:{db_config['port']}/{db_config['database']}"
+                )
+            else:
+                # MySQL
+                db_url = (
+                    f"mysql+pymysql://{db_config['user']}:{db_config['password']}"
+                    f"@{db_config['host']}:{db_config['port']}/{db_config['database']}"
+                    f"?charset=utf8mb4"
+                )
+
             self._engine = create_engine(
                 db_url,
                 poolclass=QueuePool,

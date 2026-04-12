@@ -1,5 +1,5 @@
 """策略数据模型"""
-from sqlalchemy import Column, String, Text, Enum, DateTime, JSON
+from sqlalchemy import Column, String, Text, Enum, DateTime, JSON, Float, Integer
 from datetime import datetime
 import enum
 
@@ -47,11 +47,23 @@ class Strategy(Base):
         nullable=False
     )
     performance = Column(JSON)  # 灵活的JSON字段，支持单/多货币对扩展
-    created_at = Column(DateTime, default=datetime.now, nullable=False)
+    params = Column(JSON)  # 策略参数：symbol, timeframe等
+    mt5_host_id = Column(String(32), nullable=True)  # 关联的MT5主机ID
+
+    # Validator验证结果字段
+    last_validation_time = Column(DateTime, nullable=True)
+    validation_win_rate = Column(Float, nullable=True)
+    validation_total_return = Column(Float, nullable=True)
+    validation_total_trades = Column(Integer, nullable=True)
+    validation_sharpe_ratio = Column(Float, nullable=True)
+    validation_max_drawdown = Column(Float, nullable=True)
+    validation_profit_factor = Column(Float, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
         DateTime,
-        default=datetime.now,
-        onupdate=datetime.now,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
         nullable=False
     )
 
@@ -66,6 +78,15 @@ class Strategy(Base):
             "code": self.code,
             "status": self.status.value if isinstance(self.status, StrategyStatus) else self.status,
             "performance": self.performance,
+            "params": self.params,
+            "mt5_host_id": self.mt5_host_id,
+            "last_validation_time": self.last_validation_time.isoformat() if self.last_validation_time else None,
+            "validation_win_rate": self.validation_win_rate,
+            "validation_total_return": self.validation_total_return,
+            "validation_total_trades": self.validation_total_trades,
+            "validation_sharpe_ratio": self.validation_sharpe_ratio,
+            "validation_max_drawdown": self.validation_max_drawdown,
+            "validation_profit_factor": self.validation_profit_factor,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }

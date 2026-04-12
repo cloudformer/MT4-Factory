@@ -25,7 +25,7 @@ class Account(Base):
 
     # 初始状态（用于计算收益率）
     initial_balance = Column(Float, nullable=False)  # 初始资金
-    start_time = Column(DateTime, default=datetime.now)  # 上线时间
+    start_time = Column(DateTime, default=datetime.utcnow)  # 上线时间
 
     # 当前状态（定期从MT5同步）
     current_balance = Column(Float)  # 当前余额
@@ -48,8 +48,8 @@ class Account(Base):
     notes = Column(String(500))
 
     # 时间戳
-    created_at = Column(DateTime, default=datetime.now, nullable=False)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def to_dict(self):
         """转换为字典"""

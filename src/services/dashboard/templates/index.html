@@ -16,7 +16,15 @@
         <!-- Header -->
         <header class="bg-gray-800 border-b border-gray-700 p-4 shadow-lg">
             <div class="container mx-auto flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-blue-400">Evo Trade System V1</h1>
+                <div class="flex items-center gap-4">
+                    <h1 class="text-2xl font-bold text-blue-400">Evo Trade System V1</h1>
+                    <!-- WebSocket状态指示器 -->
+                    <div class="flex items-center gap-2 text-sm">
+                        <div :class="wsConnected ? 'bg-green-500' : 'bg-red-500'"
+                             class="w-2 h-2 rounded-full animate-pulse"></div>
+                        <span class="text-gray-400" x-text="wsConnected ? '实时' : '离线'"></span>
+                    </div>
+                </div>
                 <div class="flex gap-3">
                     <button @click="generateStrategies()"
                             class="bg-green-700 hover:bg-green-800 px-5 py-2.5 rounded-lg font-medium transition-all hover:shadow-lg hover:scale-105">
@@ -59,7 +67,7 @@
 
             <!-- Tabs -->
             <div class="mb-4 border-b border-gray-700">
-                <nav class="flex gap-4">
+                <nav class="flex gap-4 flex-wrap">
                     <button @click="currentTab = 'strategies'"
                             :class="currentTab === 'strategies' ? 'border-blue-400 text-blue-400' : 'border-transparent text-gray-400'"
                             class="px-4 py-2 border-b-2 font-medium">
@@ -79,6 +87,26 @@
                             :class="currentTab === 'trades' ? 'border-blue-400 text-blue-400' : 'border-transparent text-gray-400'"
                             class="px-4 py-2 border-b-2 font-medium">
                         交易记录
+                    </button>
+                    <button @click="currentTab = 'execution'"
+                            :class="currentTab === 'execution' ? 'border-green-400 text-green-400' : 'border-transparent text-gray-400'"
+                            class="px-4 py-2 border-b-2 font-medium">
+                        🔧 Execution
+                    </button>
+                    <button @click="currentTab = 'validator'"
+                            :class="currentTab === 'validator' ? 'border-purple-400 text-purple-400' : 'border-transparent text-gray-400'"
+                            class="px-4 py-2 border-b-2 font-medium">
+                        🔬 Validator
+                    </button>
+                    <button @click="currentTab = 'mt5hosts'"
+                            :class="currentTab === 'mt5hosts' ? 'border-orange-400 text-orange-400' : 'border-transparent text-gray-400'"
+                            class="px-4 py-2 border-b-2 font-medium">
+                        🖥️ MT5主机
+                    </button>
+                    <button @click="currentTab = 'orchestrator'"
+                            :class="currentTab === 'orchestrator' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400'"
+                            class="px-4 py-2 border-b-2 font-medium">
+                        🎯 Orchestrator
                     </button>
                 </nav>
             </div>
@@ -130,7 +158,7 @@
                                 <!-- Right: Badges & Energy Bar -->
                                 <div class="flex flex-col items-end gap-2 flex-shrink-0">
                                     <!-- Badges Row -->
-                                    <div class="flex gap-2">
+                                    <div class="flex gap-2 flex-wrap justify-end">
                                         <span class="px-3 py-1 rounded text-sm font-medium"
                                               :class="{
                                                   'bg-green-900 text-green-400': strategy.status === 'active',
@@ -152,6 +180,12 @@
                                         <span class="px-2 py-1 bg-purple-900 text-purple-300 rounded text-xs font-medium"
                                               x-show="strategy.performance?.backtested_symbol"
                                               x-text="strategy.performance?.backtested_symbol"></span>
+                                        <!-- MT5 Host Badge -->
+                                        <span class="px-2 py-1 rounded text-xs font-medium"
+                                              :class="strategy.mt5_host_id ? 'bg-orange-900 text-orange-300' : 'bg-gray-700 text-gray-500'"
+                                              :title="strategy.mt5_host_id ? '已绑定MT5主机' : '未绑定MT5主机'">
+                                            🖥️ <span x-text="strategy.mt5_host_id || '未绑定'"></span>
+                                        </span>
                                     </div>
 
                                     <!-- Energy Bar -->
@@ -191,10 +225,69 @@
                             </div>
                         </div>
 
+                        <!-- Validator实时验证结果 -->
+                        <div x-show="strategy.status === 'active' && strategy.last_validation_time"
+                             class="mb-4 p-4 bg-gradient-to-r from-purple-900/30 to-indigo-900/30 border border-purple-700/50 rounded-lg">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-lg">🔄</span>
+                                    <span class="text-sm font-semibold text-purple-300">Validator实时验证</span>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <button @click="triggerValidation(strategy.id)"
+                                            class="bg-purple-700 hover:bg-purple-800 px-3 py-1 rounded text-xs transition-colors"
+                                            title="立即触发验证（不等自动调度）">
+                                        🔄 立即验证
+                                    </button>
+                                    <div class="text-xs text-gray-400">
+                                        <span x-text="strategy.last_validation_time ? new Date(strategy.last_validation_time).toLocaleString('zh-CN', {year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'}) : '-'"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-3 md:grid-cols-6 gap-3">
+                                <div>
+                                    <div class="text-gray-400 text-xs">胜率</div>
+                                    <div class="text-base font-bold text-purple-300"
+                                         x-text="strategy.validation_win_rate ? (strategy.validation_win_rate * 100).toFixed(1) + '%' : '-'"></div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-400 text-xs">收益率</div>
+                                    <div class="text-base font-bold"
+                                         :class="strategy.validation_total_return >= 0 ? 'text-green-400' : 'text-red-400'"
+                                         x-text="strategy.validation_total_return ? (strategy.validation_total_return * 100).toFixed(1) + '%' : '-'"></div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-400 text-xs">交易数</div>
+                                    <div class="text-base font-bold text-purple-300"
+                                         x-text="strategy.validation_total_trades || '-'"></div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-400 text-xs">Sharpe</div>
+                                    <div class="text-base font-bold text-purple-300"
+                                         x-text="strategy.validation_sharpe_ratio ? strategy.validation_sharpe_ratio.toFixed(2) : '-'"></div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-400 text-xs">最大回撤</div>
+                                    <div class="text-base font-bold text-red-400"
+                                         x-text="strategy.validation_max_drawdown ? (strategy.validation_max_drawdown * 100).toFixed(1) + '%' : '-'"></div>
+                                </div>
+                                <div>
+                                    <div class="text-gray-400 text-xs">盈亏比</div>
+                                    <div class="text-base font-bold text-green-400"
+                                         x-text="strategy.validation_profit_factor ? strategy.validation_profit_factor.toFixed(2) : '-'"></div>
+                                </div>
+                            </div>
+
+                            <div class="mt-2 text-xs text-gray-400">
+                                💡 基于最近500根K线的真实MT5数据验证（每小时自动更新）
+                            </div>
+                        </div>
+
                         <div x-show="strategy.performance">
                             <!-- 详细指标 (统一折叠) -->
                             <details class="mb-3">
-                                <summary class="cursor-pointer text-blue-400 text-sm font-semibold">📊 详细指标 (Profile)</summary>
+                                <summary class="cursor-pointer text-blue-400 text-sm font-semibold">📊 详细指标 (初始回测)</summary>
                                 <div class="mt-3 space-y-4">
                                     <!-- 核心指标 -->
                                     <div>
@@ -384,7 +477,14 @@
                         </details>
 
                         <!-- Action Buttons -->
-                        <div class="mt-4 flex gap-2">
+                        <div class="mt-4 flex gap-2 flex-wrap">
+                            <!-- 绑定MT5主机按钮（candidate和active状态可用） -->
+                            <button x-show="strategy.status !== 'archived'"
+                                    @click="openBindMT5Modal(strategy)"
+                                    class="bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded text-sm transition-colors">
+                                🖥️ <span x-text="strategy.mt5_host_id ? '更改MT5主机' : '绑定MT5主机'"></span>
+                            </button>
+
                             <!-- 激活按钮（只在candidate状态显示） -->
                             <button x-show="strategy.status === 'candidate'"
                                     @click="activateStrategy(strategy.id)"
@@ -906,6 +1006,432 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Execution Tab -->
+            <div x-show="currentTab === 'execution'" class="space-y-4">
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-md">
+                    <h2 class="text-2xl font-bold text-green-400 mb-4">🔧 Execution Service - 交易执行服务</h2>
+
+                    <!-- Service Status -->
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div class="bg-gray-900 p-4 rounded-lg">
+                            <div class="text-gray-400 text-sm">服务状态</div>
+                            <div class="text-2xl font-bold text-green-400" x-text="executionStatus.enabled ? '✅ 运行中' : '❌ 未运行'"></div>
+                        </div>
+                        <div class="bg-gray-900 p-4 rounded-lg">
+                            <div class="text-gray-400 text-sm">总持仓</div>
+                            <div class="text-2xl font-bold text-blue-400" x-text="executionStatus.total_positions || 0"></div>
+                        </div>
+                        <div class="bg-gray-900 p-4 rounded-lg">
+                            <div class="text-gray-400 text-sm">今日订单</div>
+                            <div class="text-2xl font-bold text-yellow-400" x-text="executionStatus.today_orders || 0"></div>
+                        </div>
+                    </div>
+
+                    <!-- MT5 Workers -->
+                    <h3 class="text-xl font-bold text-white mb-3">Real Workers (真实账户)</h3>
+                    <div class="space-y-3">
+                        <template x-for="worker in mt5Workers.filter(w => w.tags?.includes('real'))" :key="worker.worker_id">
+                            <div class="bg-gray-900 p-4 rounded-lg border"
+                                 :class="worker.healthy ? 'border-green-700' : 'border-red-700'">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="text-lg font-bold text-white" x-text="worker.name"></span>
+                                            <span class="px-2 py-1 rounded text-xs font-medium"
+                                                  :class="worker.status === 'connected' ? 'bg-green-900 text-green-400' : 'bg-red-900 text-red-400'"
+                                                  x-text="worker.status === 'connected' ? '✅ 已连接' : '❌ ' + (worker.status === 'disconnected' ? '连接失败' : '未启用')"></span>
+                                        </div>
+                                        <div class="text-sm text-gray-400">
+                                            <div>地址: <span class="text-white font-mono" x-text="worker.host + ':' + worker.port"></span></div>
+                                            <div x-show="worker.account">
+                                                账户: <span class="text-white" x-text="worker.account?.login + '@' + worker.account?.server"></span>
+                                            </div>
+                                            <div x-show="worker.error" class="text-red-400 mt-1">
+                                                错误: <span x-text="worker.error"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div x-show="worker.account" class="text-right">
+                                        <div class="text-sm text-gray-400">余额</div>
+                                        <div class="text-lg font-bold text-green-400">$<span x-text="worker.account?.balance?.toFixed(2)"></span></div>
+                                        <div class="text-sm text-gray-400 mt-1">持仓: <span class="text-white" x-text="worker.positions?.length || 0"></span>个</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Validator Tab -->
+            <div x-show="currentTab === 'validator'" class="space-y-4">
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-md">
+                    <h2 class="text-2xl font-bold text-purple-400 mb-4">🔬 Validator Service - 策略验证服务</h2>
+
+                    <!-- Service Status -->
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-gray-900 p-4 rounded-lg">
+                            <div class="text-gray-400 text-sm">服务状态</div>
+                            <div class="text-2xl font-bold text-green-400" x-text="validatorStatus.enabled ? '✅ 运行中' : '❌ 未运行'"></div>
+                        </div>
+                        <div class="bg-gray-900 p-4 rounded-lg">
+                            <div class="text-gray-400 text-sm">并发数</div>
+                            <div class="text-2xl font-bold text-blue-400" x-text="validatorStatus.concurrency || 0"></div>
+                        </div>
+                    </div>
+
+                    <!-- Data Sources -->
+                    <h3 class="text-xl font-bold text-white mb-3">数据源状态</h3>
+                    <div class="space-y-3 mb-6">
+                        <!-- Synthetic -->
+                        <div class="bg-gray-900 p-4 rounded-lg border border-blue-700">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-lg font-bold text-white">✅ 模拟数据 (Synthetic)</span>
+                                        <span class="text-sm text-gray-400">权重: <span x-text="(validatorStatus.data_sources?.synthetic?.weight * 100 || 0) + '%'"></span></span>
+                                    </div>
+                                    <div class="text-sm text-gray-400">
+                                        状态: <span class="text-green-400" x-text="validatorStatus.data_sources?.synthetic?.status || '-'"></span>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm text-gray-400">已生成</div>
+                                    <div class="text-lg font-bold text-blue-400" x-text="validatorStatus.data_sources?.synthetic?.generated || 0"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Historical -->
+                        <div class="bg-gray-900 p-4 rounded-lg border border-yellow-700">
+                            <div class="flex items-start justify-between mb-2">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-lg font-bold text-white">⏳ 历史数据 (Historical)</span>
+                                        <span class="text-sm text-gray-400">权重: <span x-text="(validatorStatus.data_sources?.historical?.weight * 100 || 0) + '%'"></span></span>
+                                    </div>
+                                    <div class="text-sm text-gray-400">
+                                        状态: <span class="text-yellow-400" x-text="validatorStatus.data_sources?.historical?.status || '-'"></span>
+                                    </div>
+                                    <div class="text-sm text-gray-400">
+                                        品种: <span class="text-white" x-text="validatorStatus.data_sources?.historical?.symbols || 0"></span>个 |
+                                        周期: <span class="text-white" x-text="validatorStatus.data_sources?.historical?.timeframes?.length || 0"></span>个
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm text-gray-400">进度</div>
+                                    <div class="text-lg font-bold text-yellow-400" x-text="((validatorStatus.data_sources?.historical?.progress || 0) * 100).toFixed(0) + '%'"></div>
+                                </div>
+                            </div>
+                            <!-- Progress Bar -->
+                            <div class="w-full bg-gray-700 rounded-full h-2">
+                                <div class="bg-yellow-400 h-2 rounded-full transition-all"
+                                     :style="'width: ' + ((validatorStatus.data_sources?.historical?.progress || 0) * 100) + '%'"></div>
+                            </div>
+                        </div>
+
+                        <!-- Realtime -->
+                        <div class="bg-gray-900 p-4 rounded-lg border border-green-700">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-lg font-bold text-white">✅ 实时数据 (Realtime)</span>
+                                        <span class="text-sm text-gray-400">权重: <span x-text="(validatorStatus.data_sources?.realtime?.weight * 100 || 0) + '%'"></span></span>
+                                    </div>
+                                    <div class="text-sm text-gray-400">
+                                        状态: <span class="text-green-400" x-text="validatorStatus.data_sources?.realtime?.status || '-'"></span>
+                                    </div>
+                                    <div class="text-sm text-gray-400">
+                                        MT5主机: <span class="text-white" x-text="validatorStatus.data_sources?.realtime?.mt5_host || '-'"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Demo Workers -->
+                    <h3 class="text-xl font-bold text-white mb-3">Demo Workers (验证账户)</h3>
+                    <div class="space-y-3">
+                        <template x-for="worker in mt5Workers.filter(w => w.tags?.includes('demo'))" :key="worker.worker_id">
+                            <div class="bg-gray-900 p-4 rounded-lg border"
+                                 :class="worker.healthy ? 'border-green-700' : 'border-gray-700'">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="text-lg font-bold text-white" x-text="worker.name"></span>
+                                            <span class="px-2 py-1 rounded text-xs font-medium"
+                                                  :class="worker.status === 'connected' ? 'bg-green-900 text-green-400' : (worker.status === 'disabled' ? 'bg-gray-700 text-gray-400' : 'bg-red-900 text-red-400')"
+                                                  x-text="worker.status === 'connected' ? '✅ 已连接' : (worker.status === 'disabled' ? '⚪ 未启用' : '❌ 连接失败')"></span>
+                                        </div>
+                                        <div class="text-sm text-gray-400">
+                                            <div>地址: <span class="text-white font-mono" x-text="worker.host + ':' + worker.port"></span></div>
+                                            <div x-show="worker.account">
+                                                账户: <span class="text-white" x-text="worker.account?.login + '@' + worker.account?.server"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div x-show="worker.account" class="text-right">
+                                        <div class="text-sm text-gray-400">余额</div>
+                                        <div class="text-lg font-bold text-green-400">$<span x-text="worker.account?.balance?.toFixed(2)"></span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MT5 Hosts Tab -->
+            <div x-show="currentTab === 'mt5hosts'" class="space-y-4">
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-md">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold text-orange-400">🖥️ MT5主机管理</h2>
+                        <button @click="showAddHostModal = true"
+                                class="bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded-lg font-medium transition-all">
+                            ➕ 添加主机
+                        </button>
+                    </div>
+
+                    <!-- Filter Buttons -->
+                    <div class="flex gap-2 mb-4">
+                        <button @click="hostFilter = 'all'"
+                                :class="hostFilter === 'all' ? 'bg-blue-600' : 'bg-gray-700'"
+                                class="px-4 py-2 rounded-lg">全部</button>
+                        <button @click="hostFilter = 'demo'"
+                                :class="hostFilter === 'demo' ? 'bg-blue-600' : 'bg-gray-700'"
+                                class="px-4 py-2 rounded-lg">Demo</button>
+                        <button @click="hostFilter = 'real'"
+                                :class="hostFilter === 'real' ? 'bg-blue-600' : 'bg-gray-700'"
+                                class="px-4 py-2 rounded-lg">Real</button>
+                    </div>
+
+                    <!-- MT5 Hosts List -->
+                    <div class="space-y-3">
+                        <template x-for="host in filteredMT5Hosts" :key="host.id">
+                            <div class="bg-gray-900 p-4 rounded-lg border"
+                                 :class="host.enabled ? 'border-green-700' : 'border-gray-700'">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="text-lg font-bold text-white" x-text="host.name"></span>
+                                            <span class="px-2 py-1 rounded text-xs font-medium"
+                                                  :class="host.host_type === 'demo' ? 'bg-blue-900 text-blue-400' : 'bg-red-900 text-red-400'"
+                                                  x-text="host.host_type.toUpperCase()"></span>
+                                            <span class="px-2 py-1 rounded text-xs font-medium"
+                                                  :class="host.enabled ? 'bg-green-900 text-green-400' : 'bg-gray-700 text-gray-400'"
+                                                  x-text="host.enabled ? '✅ 启用' : '⚪ 禁用'"></span>
+                                        </div>
+                                        <div class="text-sm text-gray-400 space-y-1">
+                                            <div>地址: <span class="text-white font-mono" x-text="host.host + ':' + host.port"></span></div>
+                                            <div>登录: <span class="text-white" x-text="host.login || '-'"></span></div>
+                                            <div>服务器: <span class="text-white" x-text="host.server || '-'"></span></div>
+                                            <div x-show="host.tags && host.tags.length > 0">
+                                                标签:
+                                                <template x-for="tag in host.tags" :key="tag">
+                                                    <span class="inline-block bg-gray-700 px-2 py-0.5 rounded text-xs mr-1" x-text="tag"></span>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button @click="testMT5Host(host.id)"
+                                                class="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded text-sm">
+                                            测试连接
+                                        </button>
+                                        <button @click="editMT5Host(host)"
+                                                class="bg-yellow-600 hover:bg-yellow-700 px-3 py-1.5 rounded text-sm">
+                                            编辑
+                                        </button>
+                                        <button @click="deleteMT5Host(host.id)"
+                                                class="bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded text-sm">
+                                            删除
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                        <div x-show="filteredMT5Hosts.length === 0" class="text-center text-gray-400 py-8">
+                            暂无MT5主机配置
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add/Edit MT5 Host Modal -->
+            <div x-show="showAddHostModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                 @click.self="showAddHostModal = false">
+                <div class="bg-gray-800 rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <h3 class="text-xl font-bold text-white mb-4" x-text="editingHost ? '编辑MT5主机' : '添加MT5主机'"></h3>
+                    <form @submit.prevent="submitMT5Host()">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-1">名称 *</label>
+                                <input type="text" x-model="hostForm.name" required
+                                       class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-1">类型 *</label>
+                                <select x-model="hostForm.host_type" required
+                                        class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white">
+                                    <option value="demo">Demo</option>
+                                    <option value="real">Real</option>
+                                </select>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-1">主机地址 *</label>
+                                    <input type="text" x-model="hostForm.host" required
+                                           class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-1">端口 *</label>
+                                    <input type="number" x-model.number="hostForm.port" required
+                                           min="1" max="65535"
+                                           @wheel.prevent
+                                           class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-1">API密钥</label>
+                                <input type="text" x-model="hostForm.api_key"
+                                       class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-1">MT5登录账号</label>
+                                    <input type="number" x-model.number="hostForm.login"
+                                           @wheel.prevent
+                                           class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-400 mb-1">MT5密码</label>
+                                    <input type="password" x-model="hostForm.password"
+                                           class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-1">MT5服务器</label>
+                                <input type="text" x-model="hostForm.server"
+                                       class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-1">标签（逗号分隔）</label>
+                                <input type="text" x-model="hostForm.tagsStr" placeholder="demo,validation,primary"
+                                       class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-400 mb-1">备注</label>
+                                <textarea x-model="hostForm.notes" rows="2"
+                                          class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white"></textarea>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" x-model="hostForm.enabled" class="rounded">
+                                    <span class="text-white">启用</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" x-model="hostForm.use_investor" class="rounded">
+                                    <span class="text-white">使用只读账户</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="flex gap-3 mt-6">
+                            <button type="submit"
+                                    class="flex-1 bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded-lg font-medium">
+                                <span x-text="editingHost ? '保存' : '添加'"></span>
+                            </button>
+                            <button type="button" @click="showAddHostModal = false"
+                                    class="flex-1 bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-medium">
+                                取消
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Bind MT5 Host to Strategy Modal -->
+            <div x-show="showBindMT5Modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                 @click.self="showBindMT5Modal = false">
+                <div class="bg-gray-800 rounded-xl p-6 w-full max-w-md">
+                    <h3 class="text-xl font-bold text-white mb-4">绑定MT5主机</h3>
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-400 mb-2">策略: <span class="text-white font-medium" x-text="bindingStrategy?.name"></span></p>
+                    </div>
+                    <form @submit.prevent="submitBindMT5()">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-400 mb-2">选择MT5主机</label>
+                            <select x-model="bindMT5Form.mt5_host_id" required
+                                    class="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white">
+                                <option value="">-- 请选择 --</option>
+                                <template x-for="host in mt5Hosts.filter(h => h.enabled)" :key="host.id">
+                                    <option :value="host.id" x-text="`${host.name} (${host.host_type})`"></option>
+                                </template>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">仅显示已启用的MT5主机</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="submit"
+                                    class="flex-1 bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded-lg font-medium">
+                                确定绑定
+                            </button>
+                            <button type="button" @click="unbindMT5()"
+                                    x-show="bindingStrategy?.mt5_host_id"
+                                    class="flex-1 bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg font-medium">
+                                解绑
+                            </button>
+                            <button type="button" @click="showBindMT5Modal = false"
+                                    class="flex-1 bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg font-medium">
+                                取消
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Orchestrator Tab -->
+            <div x-show="currentTab === 'orchestrator'" class="space-y-4">
+                <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-md">
+                    <h2 class="text-2xl font-bold text-yellow-400 mb-4">🎯 Orchestrator Service - 策略协调服务</h2>
+
+                    <!-- Service Status -->
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <div class="bg-gray-900 p-4 rounded-lg">
+                            <div class="text-gray-400 text-sm">服务状态</div>
+                            <div class="text-2xl font-bold text-green-400" x-text="orchestratorStatus.enabled ? '✅ 运行中' : '❌ 未运行'"></div>
+                        </div>
+                        <div class="bg-gray-900 p-4 rounded-lg">
+                            <div class="text-gray-400 text-sm">Active策略</div>
+                            <div class="text-2xl font-bold text-blue-400" x-text="orchestratorStatus.active_strategies || 0"></div>
+                        </div>
+                        <div class="bg-gray-900 p-4 rounded-lg">
+                            <div class="text-gray-400 text-sm">今日信号</div>
+                            <div class="text-2xl font-bold text-purple-400" x-text="orchestratorStatus.total_signals_today || 0"></div>
+                        </div>
+                    </div>
+
+                    <!-- MT5 Connection Status -->
+                    <h3 class="text-xl font-bold text-white mb-3">MT5机器连接状态</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <template x-for="worker in mt5Workers" :key="worker.worker_id">
+                            <div class="bg-gray-900 p-3 rounded-lg border"
+                                 :class="worker.healthy ? 'border-green-700' : 'border-red-700'">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span x-text="worker.status === 'connected' ? '✅' : (worker.status === 'disabled' ? '⚪' : '❌')"></span>
+                                        <span class="text-white font-medium" x-text="worker.name"></span>
+                                    </div>
+                                    <div class="flex gap-1">
+                                        <template x-for="tag in worker.tags" :key="tag">
+                                            <span class="px-2 py-1 rounded text-xs bg-gray-700 text-gray-300" x-text="tag"></span>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -979,6 +1505,40 @@
                 expandedAccounts: {},
                 platformInfo: null,
 
+                // 服务状态
+                executionStatus: {},
+                validatorStatus: {},
+                orchestratorStatus: {},
+                mt5Workers: [],
+
+                // MT5主机管理
+                mt5Hosts: [],
+                hostFilter: 'all',
+                showAddHostModal: false,
+                editingHost: null,
+                hostForm: {
+                    name: '',
+                    host_type: 'demo',
+                    host: '',
+                    port: 9090,
+                    api_key: '',
+                    timeout: 10,
+                    login: null,
+                    password: '',
+                    server: '',
+                    use_investor: true,
+                    enabled: true,
+                    tagsStr: '',
+                    notes: ''
+                },
+
+                // 绑定Strategy到MT5 Host
+                showBindMT5Modal: false,
+                bindingStrategy: null,
+                bindMT5Form: {
+                    mt5_host_id: ''
+                },
+
                 // 策略筛选器
                 statusFilter: 'all',
                 scoreFilter: 0,
@@ -994,6 +1554,12 @@
                 currentPage: 1,
                 pageSize: 20,  // 默认每页20条
 
+                // WebSocket连接状态
+                ws: null,
+                wsConnected: false,
+                wsReconnectAttempts: 0,
+                wsMaxReconnectAttempts: 5,
+
                 async init() {
                     // 读取URL参数
                     this.readUrlParams();
@@ -1003,6 +1569,102 @@
                     await this.loadAccounts();
                     await this.loadSignals();
                     await this.loadTrades();
+                    await this.loadServiceStatus();
+                    await this.loadMT5Workers();
+                    await this.loadMT5Hosts();
+
+                    // 初始化WebSocket连接
+                    this.initWebSocket();
+                },
+
+                // WebSocket初始化
+                initWebSocket() {
+                    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                    const wsUrl = `${wsProtocol}//${window.location.host}/ws`;
+
+                    console.log('🔌 连接WebSocket:', wsUrl);
+
+                    try {
+                        this.ws = new WebSocket(wsUrl);
+
+                        this.ws.onopen = () => {
+                            console.log('✅ WebSocket连接成功');
+                            this.wsConnected = true;
+                            this.wsReconnectAttempts = 0;
+                            showToast('实时推送已连接', 'success');
+
+                            // 发送心跳保持连接
+                            setInterval(() => {
+                                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                                    this.ws.send(JSON.stringify({ type: 'ping' }));
+                                }
+                            }, 30000); // 每30秒一次心跳
+                        };
+
+                        this.ws.onmessage = (event) => {
+                            const message = JSON.parse(event.data);
+                            this.handleWebSocketMessage(message);
+                        };
+
+                        this.ws.onerror = (error) => {
+                            console.error('❌ WebSocket错误:', error);
+                            this.wsConnected = false;
+                        };
+
+                        this.ws.onclose = () => {
+                            console.log('❌ WebSocket连接关闭');
+                            this.wsConnected = false;
+
+                            // 自动重连
+                            if (this.wsReconnectAttempts < this.wsMaxReconnectAttempts) {
+                                this.wsReconnectAttempts++;
+                                const delay = Math.min(1000 * Math.pow(2, this.wsReconnectAttempts), 30000);
+                                console.log(`🔄 ${delay/1000}秒后重连 (尝试 ${this.wsReconnectAttempts}/${this.wsMaxReconnectAttempts})`);
+                                setTimeout(() => this.initWebSocket(), delay);
+                            } else {
+                                showToast('实时推送连接失败，请刷新页面', 'error', 0);
+                            }
+                        };
+
+                    } catch (error) {
+                        console.error('WebSocket初始化失败:', error);
+                        this.wsConnected = false;
+                    }
+                },
+
+                // 处理WebSocket消息
+                handleWebSocketMessage(message) {
+                    if (message.type === 'update') {
+                        console.log('📊 收到实时数据更新');
+
+                        // 更新统计数据
+                        if (message.data && message.data.stats) {
+                            this.stats = message.data.stats;
+                        }
+
+                        // 更新策略列表
+                        if (message.data && message.data.latest_strategies) {
+                            // 只更新前几个，避免列表跳动
+                            this.strategies = this.strategies.map(s => {
+                                const updated = message.data.latest_strategies.find(u => u.id === s.id);
+                                return updated || s;
+                            });
+                        }
+
+                        // 更新信号列表
+                        if (message.data && message.data.latest_signals) {
+                            this.signals = message.data.latest_signals;
+                        }
+
+                        // 更新交易列表
+                        if (message.data && message.data.latest_trades) {
+                            this.trades = message.data.latest_trades;
+                            this.applyTradeFilters();
+                        }
+                    } else if (message.type === 'pong') {
+                        // 心跳响应
+                        console.log('💓 心跳响应');
+                    }
                 },
 
                 // 读取URL参数
@@ -1070,6 +1732,13 @@
                     return filtered;
                 },
 
+                get filteredMT5Hosts() {
+                    if (this.hostFilter === 'all') {
+                        return this.mt5Hosts;
+                    }
+                    return this.mt5Hosts.filter(h => h.host_type === this.hostFilter);
+                },
+
                 async loadStats() {
                     const response = await fetch('/api/stats');
                     this.stats = await response.json();
@@ -1097,6 +1766,318 @@
                         this.applyTradeFilters();
                     } else {
                         this.filteredTrades = this.trades;
+                    }
+                },
+
+                async loadServiceStatus() {
+                    try {
+                        // Load Execution status
+                        const execResponse = await fetch('/api/services/execution/status');
+                        this.executionStatus = await execResponse.json();
+
+                        // Load Validator status
+                        const validatorResponse = await fetch('/api/services/validator/status');
+                        this.validatorStatus = await validatorResponse.json();
+
+                        // Load Orchestrator status
+                        const orchestratorResponse = await fetch('/api/services/orchestrator/status');
+                        this.orchestratorStatus = await orchestratorResponse.json();
+                    } catch (error) {
+                        console.error('加载服务状态失败:', error);
+                    }
+                },
+
+                async loadMT5Workers() {
+                    try {
+                        const response = await fetch('/api/mt5/workers');
+                        const data = await response.json();
+                        this.mt5Workers = data.workers || [];
+                    } catch (error) {
+                        console.error('加载MT5 Workers失败:', error);
+                        this.mt5Workers = [];
+                    }
+                },
+
+                // MT5 Hosts管理方法
+                async loadMT5Hosts() {
+                    try {
+                        const response = await fetch('/api/mt5-hosts');
+                        const data = await response.json();
+                        this.mt5Hosts = data.hosts || [];
+                    } catch (error) {
+                        console.error('加载MT5主机失败:', error);
+                        this.mt5Hosts = [];
+                    }
+                },
+
+                editMT5Host(host) {
+                    this.editingHost = host;
+                    this.hostForm = {
+                        name: host.name,
+                        host_type: host.host_type,
+                        host: host.host,
+                        port: host.port,
+                        api_key: host.api_key || '',
+                        timeout: host.timeout,
+                        login: host.login,
+                        password: '',  // 不显示密码
+                        server: host.server || '',
+                        use_investor: host.use_investor,
+                        enabled: host.enabled,
+                        tagsStr: host.tags ? host.tags.join(',') : '',
+                        notes: host.notes || ''
+                    };
+                    this.showAddHostModal = true;
+                },
+
+                async submitMT5Host() {
+                    try {
+                        // 解析tags
+                        const tags = this.hostForm.tagsStr
+                            ? this.hostForm.tagsStr.split(',').map(t => t.trim()).filter(t => t)
+                            : [];
+
+                        const payload = {
+                            name: this.hostForm.name,
+                            host_type: this.hostForm.host_type,
+                            host: this.hostForm.host,
+                            port: parseInt(this.hostForm.port),
+                            api_key: this.hostForm.api_key || null,
+                            timeout: parseInt(this.hostForm.timeout),
+                            login: this.hostForm.login ? parseInt(this.hostForm.login) : null,
+                            password: this.hostForm.password || null,
+                            server: this.hostForm.server || null,
+                            use_investor: this.hostForm.use_investor,
+                            enabled: this.hostForm.enabled,
+                            tags: tags,
+                            notes: this.hostForm.notes || null
+                        };
+
+                        // 调试日志
+                        console.log('🔍 提交前的hostForm.port:', this.hostForm.port, typeof this.hostForm.port);
+                        console.log('🔍 提交的payload.port:', payload.port, typeof payload.port);
+                        console.log('🔍 完整payload:', JSON.stringify(payload, null, 2));
+
+                        let response;
+                        if (this.editingHost) {
+                            // 更新
+                            response = await fetch(`/api/mt5-hosts/${this.editingHost.id}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+                        } else {
+                            // 创建
+                            response = await fetch('/api/mt5-hosts', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+                        }
+
+                        const data = await response.json();
+
+                        if (data.success || response.ok) {
+                            showToast(this.editingHost ? 'MT5主机更新成功' : 'MT5主机添加成功', 'success');
+                            this.showAddHostModal = false;
+                            this.editingHost = null;
+                            this.resetHostForm();
+                            await this.loadMT5Hosts();
+                        } else {
+                            showToast('操作失败: ' + (data.detail || '未知错误'), 'error');
+                        }
+                    } catch (error) {
+                        console.error('提交MT5主机失败:', error);
+                        showToast('操作失败: ' + error.message, 'error');
+                    }
+                },
+
+                async deleteMT5Host(hostId) {
+                    if (!confirm('确定要删除此MT5主机吗？')) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`/api/mt5-hosts/${hostId}`, {
+                            method: 'DELETE'
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            showToast('MT5主机删除成功', 'success');
+                            await this.loadMT5Hosts();
+                        } else {
+                            showToast('删除失败: ' + (data.detail || '未知错误'), 'error');
+                        }
+                    } catch (error) {
+                        console.error('删除MT5主机失败:', error);
+                        showToast('删除失败: ' + error.message, 'error');
+                    }
+                },
+
+                async testMT5Host(hostId) {
+                    try {
+                        showToast('正在测试连接...', 'info');
+                        const response = await fetch(`/api/mt5-hosts/${hostId}/test`, {
+                            method: 'POST'
+                        });
+
+                        const data = await response.json();
+
+                        console.log('🔍 完整测试结果:', data);
+
+                        // 构建详细消息
+                        let messages = [];
+
+                        // 主机信息
+                        messages.push(`📡 ${data.host_name}`);
+                        messages.push(`🌐 ${data.host}:${data.port}`);
+                        messages.push('');
+
+                        // Level 1: TCP
+                        const tcp = data.tests?.level1_tcp;
+                        if (tcp) {
+                            if (tcp.status === 'success') {
+                                messages.push(`✅ Level 1 (TCP): 端口可达 (${tcp.latency_ms}ms)`);
+                            } else if (tcp.status === 'failed') {
+                                messages.push(`❌ Level 1 (TCP): ${tcp.message}`);
+                            } else {
+                                messages.push(`⚠️ Level 1 (TCP): ${tcp.message}`);
+                            }
+                        }
+
+                        // Level 2: HTTP
+                        const http = data.tests?.level2_http;
+                        if (http) {
+                            if (http.status === 'success') {
+                                messages.push(`✅ Level 2 (HTTP): 服务响应正常 (${http.latency_ms}ms)`);
+                            } else if (http.status === 'failed') {
+                                messages.push(`❌ Level 2 (HTTP): ${http.message}`);
+                            } else if (http.status === 'timeout') {
+                                messages.push(`⏱️ Level 2 (HTTP): ${http.message}`);
+                            } else {
+                                messages.push(`⚠️ Level 2 (HTTP): ${http.message}`);
+                            }
+                        } else if (tcp?.status === 'success') {
+                            messages.push(`⏭️ Level 2 (HTTP): 未测试（TCP失败）`);
+                        }
+
+                        // Level 3: MT5
+                        const mt5 = data.tests?.level3_mt5;
+                        if (mt5) {
+                            if (mt5.status === 'success') {
+                                messages.push(`✅ Level 3 (MT5): MT5 Terminal已连接`);
+                            } else if (mt5.status === 'failed') {
+                                messages.push(`❌ Level 3 (MT5): ${mt5.message}`);
+                            } else if (mt5.status === 'unknown') {
+                                messages.push(`⚠️ Level 3 (MT5): ${mt5.message}`);
+                            }
+                        } else if (http?.status === 'success' || http?.status === 'failed') {
+                            messages.push(`⏭️ Level 3 (MT5): 未测试（HTTP未成功）`);
+                        }
+
+                        // 显示结果
+                        const fullMessage = messages.join('\n');
+
+                        if (data.success && data.overall_status === 'all_passed') {
+                            showToast(fullMessage, 'success', 8000);
+                        } else if (data.overall_status === 'tcp_failed') {
+                            showToast(fullMessage, 'error', 8000);
+                        } else if (data.overall_status === 'not_http_service' || data.overall_status === 'http_ok_not_mt5') {
+                            showToast(fullMessage, 'warning', 8000);
+                        } else {
+                            showToast(fullMessage, 'error', 8000);
+                        }
+
+                    } catch (error) {
+                        console.error('测试主机失败:', error);
+                        showToast('测试失败: ' + error.message, 'error');
+                    }
+                },
+
+                resetHostForm() {
+                    this.hostForm = {
+                        name: '',
+                        host_type: 'demo',
+                        host: '',
+                        port: 9090,
+                        api_key: '',
+                        timeout: 10,
+                        login: null,
+                        password: '',
+                        server: '',
+                        use_investor: true,
+                        enabled: true,
+                        tagsStr: '',
+                        notes: ''
+                    };
+                },
+
+                // 绑定策略到MT5主机
+                openBindMT5Modal(strategy) {
+                    this.bindingStrategy = strategy;
+                    this.bindMT5Form.mt5_host_id = strategy.mt5_host_id || '';
+                    this.showBindMT5Modal = true;
+                },
+
+                async submitBindMT5() {
+                    if (!this.bindingStrategy) return;
+
+                    try {
+                        const response = await fetch(`/api/registration/bind-mt5/${this.bindingStrategy.id}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                mt5_host_id: this.bindMT5Form.mt5_host_id || null
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            showToast(data.message, 'success');
+                            this.showBindMT5Modal = false;
+                            this.bindingStrategy = null;
+                            await this.loadStrategies();
+                        } else {
+                            showToast('绑定失败: ' + (data.message || '未知错误'), 'error');
+                        }
+                    } catch (error) {
+                        console.error('绑定MT5主机失败:', error);
+                        showToast('绑定失败: ' + error.message, 'error');
+                    }
+                },
+
+                async unbindMT5() {
+                    if (!this.bindingStrategy) return;
+
+                    if (!confirm(`确定要解绑策略 ${this.bindingStrategy.name} 的MT5主机吗？`)) {
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`/api/registration/bind-mt5/${this.bindingStrategy.id}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                mt5_host_id: null
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            showToast(data.message, 'success');
+                            this.showBindMT5Modal = false;
+                            this.bindingStrategy = null;
+                            await this.loadStrategies();
+                        } else {
+                            showToast('解绑失败: ' + (data.message || '未知错误'), 'error');
+                        }
+                    } catch (error) {
+                        console.error('解绑MT5主机失败:', error);
+                        showToast('解绑失败: ' + error.message, 'error');
                     }
                 },
 
@@ -1185,36 +2166,18 @@
 
                 async loadAccounts() {
                     try {
-                        const response = await fetch('http://localhost:8002/accounts-db');
-                        const result = await response.json();
+                        const response = await fetch('/api/accounts');
+                        const data = await response.json();
 
-                        if (result.code === 0) {
-                            this.accounts = result.data;
-                            this.platformInfo = result.platform;
+                        this.accounts = data.accounts || [];
 
-                            // 显示平台和同步状态提示
-                            if (this.platformInfo) {
-                                if (this.platformInfo.is_windows && this.platformInfo.sync_status) {
-                                    const status = this.platformInfo.sync_status;
-                                    if (status.success) {
-                                        console.log(`✅ ${status.message}`);
-                                        console.log(`   余额: ${status.balance}, 净值: ${status.equity}`);
-                                    } else {
-                                        console.warn(`⚠️ ${status.message}`);
-                                    }
-                                } else if (this.platformInfo.is_mock) {
-                                    console.warn('⚠️ 当前为Mock模式（macOS/Linux），显示模拟数据');
-                                    console.warn('   提示：真实MT5数据需要在Windows系统上运行');
-                                }
-                            }
-
-                            // 为每个账户加载详细信息（策略配比和盈利统计）
-                            for (let account of this.accounts) {
-                                await this.loadAccountDetails(account);
-                            }
+                        // Mock模式提示
+                        if (data.mock_mode) {
+                            console.log('📊 Mock模式: 显示模拟账户数据');
                         }
                     } catch (error) {
                         console.error('加载账户失败:', error);
+                        this.accounts = [];
                     }
                 },
 
@@ -1340,10 +2303,22 @@
                             showToast(`✅ ${result.message}`, 'success');
                             await this.refresh();
                         } else {
-                            showToast(`❌ ${result.message}`, 'error');
+                            // Show detailed error message
+                            let errorMsg = `❌ ${result.message}`;
+
+                            // If evaluation details are included, show them
+                            if (result.evaluation) {
+                                const eval = result.evaluation;
+                                errorMsg += `\n\n核心指标: ${eval.core_passed}/${eval.core_required} 通过`;
+                                if (eval.reasons && eval.reasons.length > 0) {
+                                    errorMsg += '\n' + eval.reasons.slice(0, 4).join('\n');
+                                }
+                            }
+
+                            showToast(errorMsg, 'error', 5000);
                         }
                     } catch (error) {
-                        showToast(`激活失败：${error.message}`, 'error');
+                        showToast(`❌ 激活失败：${error.message}`, 'error');
                     }
                 },
 
@@ -1367,6 +2342,39 @@
                         }
                     } catch (error) {
                         showToast(`停用失败：${error.message}`, 'error');
+                    }
+                },
+
+                // 手动触发Validator验证
+                async triggerValidation(strategyId) {
+                    try {
+                        showToast('🔄 正在触发验证...', 'info', 2000);
+
+                        const response = await fetch(`http://localhost:8080/api/validate/strategy/${strategyId}`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'}
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}`);
+                        }
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            showToast(`✅ ${result.message}`, 'success', 3000);
+
+                            // 3秒后自动刷新查看结果
+                            setTimeout(async () => {
+                                await this.loadStrategies();
+                                showToast('✅ 验证完成，数据已更新', 'success', 2000);
+                            }, 3000);
+                        } else {
+                            showToast(`❌ 验证失败`, 'error');
+                        }
+                    } catch (error) {
+                        console.error('触发验证失败:', error);
+                        showToast(`❌ 无法连接Validator服务，请确认服务已启动`, 'error', 4000);
                     }
                 },
 

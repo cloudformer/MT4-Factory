@@ -1,8 +1,77 @@
-INFO:     Started server process [82847]
+INFO:     Started server process [6815]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:51707 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56576 - "GET /strategies HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56628 - "GET /strategies?status=active HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57003 - "POST /strategies/STR_8a12e1ad/activate HTTP/1.1" 404 Not Found
+🎯 开始生成 2 个策略...
+
+🔬 [1/2] 评估策略: MA_8x51
+⚠️  配置文件未找到: /Users/frankzhang/repo-private/MT4-Factory/config/development.yaml，使用默认配置
+📊 [1/3] 合成数据评估...
+   📊 生成合成数据：EURUSD x 3000根K线...
+   ✅ 完成 - 综合评分: 57.2
+   ✅ 评估完成 - 推荐度: 57.2分
+      Sharpe: 0.41, 胜率: 34.5%, 交易数: 55
+
+🔬 [2/2] 评估策略: MA_15x60
+📊 [1/3] 合成数据评估...
+   📊 生成合成数据：EURUSD x 3000根K线...
+🎯 开始生成 2 个策略...
+
+🔬 [1/2] 评估策略: MA_12x57
+📊 [1/3] 合成数据评估...
+   📊 生成合成数据：EURUSD x 3000根K线...
+   ✅ 完成 - 综合评分: 64.1
+   ✅ 评估完成 - 推荐度: 64.1分
+      Sharpe: 0.44, 胜率: 34.8%, 交易数: 23
+
+✅ 策略生成完成！共 2 个
+INFO:     127.0.0.1:61237 - "POST /strategies/generate HTTP/1.1" 200 OK
+   ✅ 完成 - 综合评分: 71.3
+   ✅ 评估完成 - 推荐度: 71.3分
+      Sharpe: 0.4, 胜率: 46.5%, 交易数: 43
+
+🔬 [2/2] 评估策略: MA_19x40
+📊 [1/3] 合成数据评估...
+   📊 生成合成数据：EURUSD x 3000根K线...
+   ✅ 完成 - 综合评分: 57.8
+   ✅ 评估完成 - 推荐度: 57.8分
+      Sharpe: 0.44, 胜率: 28.6%, 交易数: 49
+
+✅ 策略生成完成！共 2 个
+INFO:     127.0.0.1:61240 - "POST /strategies/generate HTTP/1.1" 200 OK
+🎯 开始生成 2 个策略...
+
+🔬 [1/2] 评估策略: MA_14x41
+📊 [1/3] 合成数据评估...
+   📊 生成合成数据：EURUSD x 3000根K线...
+   ✅ 完成 - 综合评分: 56.2
+   ✅ 评估完成 - 推荐度: 56.2分
+      Sharpe: 0.3, 胜率: 38.0%, 交易数: 50
+
+🔬 [2/2] 评估策略: MA_7x53
+📊 [1/3] 合成数据评估...
+   📊 生成合成数据：EURUSD x 3000根K线...
+   ✅ 完成 - 综合评分: 64.3
+   ✅ 评估完成 - 推荐度: 64.3分
+      Sharpe: 0.43, 胜率: 40.7%, 交易数: 54
+
+✅ 策略生成完成！共 2 个
+INFO:     127.0.0.1:63372 - "POST /strategies/generate HTTP/1.1" 200 OK
+🎯 开始生成 2 个策略...
+
+🔬 [1/2] 评估策略: MA_18x47
+📊 [1/3] 合成数据评估...
+   📊 生成合成数据：EURUSD x 3000根K线...
+   ✅ 完成 - 综合评分: 73.0
+   ✅ 评估完成 - 推荐度: 73.0分
+      Sharpe: 0.6, 胜率: 62.5%, 交易数: 32
+
+🔬 [2/2] 评估策略: MA_5x32
+📊 [1/3] 合成数据评估...
+   📊 生成合成数据：EURUSD x 3000根K线...
+   ✅ 完成 - 综合评分: 68.6
+   ✅ 评估完成 - 推荐度: 68.6分
+      Sharpe: 0.58, 胜率: 50.0%, 交易数: 54
+
+✅ 策略生成完成！共 2 个
+INFO:     127.0.0.1:52933 - "POST /strategies/generate HTTP/1.1" 200 OK

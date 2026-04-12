@@ -1,0 +1,128 @@
+# Windows本地环境配置
+# 用途：Windows开发机/调试机，运行Docker容器
+# 场景：本地完整功能测试（真实MT5 + 所有服务）
+
+# ==================== 环境标识 ====================
+env: windows
+
+# ==================== 数据库配置 ====================
+database:
+  # PostgreSQL容器（Docker网络内）
+  host: "postgres"                    # Docker Compose服务名
+  port: 5432
+  database: "evo_trade"
+  user: "evo_trade_user"
+  password: "evo_trade_pass_dev_2024"  # 开发环境密码
+
+  # 连接池配置
+  pool_size: 50                       # 连接池大小（支持Validator并发）
+  max_overflow: 50                    # 最大溢出连接
+  pool_pre_ping: true                 # 连接健康检查
+  echo: false                         # SQL日志（调试时可设为true）
+
+# ==================== MT5配置 ====================
+mt5:
+  # 连接参数（容器访问宿主机MT5）
+  host: "host.docker.internal"        # Docker特殊地址（指向宿主机）
+  port: 9090                          # MT5 API Bridge端口
+
+  # MT5账户（Demo账户）
+  login: 5049130509                   # 替换为你的Demo账号
+  password: "your_password_here"      # 替换为你的密码
+  server: "MetaQuotes-Demo"           # 替换为你的服务器
+
+  # API认证（可选）
+  api_key: "demo_key_12345"           # 简单密钥即可
+
+  # 超时配置
+  timeout: 10                         # 超时时间（秒）
+
+  # 投资者模式（只读）
+  use_investor: true                  # true=只读模式，false=可交易
+
+# ==================== Validator配置 ====================
+validator:
+  enabled: true                       # 启用Validator服务
+  mode: "active_strategies"           # 验证模式：active_strategies
+
+  # 并发配置
+  concurrency: 20                     # 并发验证数（推荐20-50）
+  schedule_interval: 3600             # 执行间隔（秒）：3600=每小时
+
+  # 账户配置
+  demo_account: "5049130509"          # Demo账户
+  initial_balance: 100                # 回测初始资金（USD）
+
+  # 数据获取配置
+  bars_count: 500                     # 每次获取K线数量
+
+# ==================== 服务配置 ====================
+services:
+  # Dashboard服务
+  dashboard:
+    host: "0.0.0.0"
+    port: 8001
+    debug: true                       # 开发模式
+
+  # Orchestrator服务
+  orchestrator:
+    host: "0.0.0.0"
+    port: 8002
+
+  # Strategy服务
+  strategy:
+    host: "0.0.0.0"
+    port: 8000
+
+  # Execution服务
+  execution:
+    host: "0.0.0.0"
+    port: 8003
+
+# ==================== 日志配置 ====================
+logging:
+  level: "INFO"                       # DEBUG/INFO/WARNING/ERROR
+  format: "detailed"                  # simple/detailed
+  file: "logs/mt4_factory.log"
+  max_bytes: 10485760                 # 10MB
+  backup_count: 5
+
+# ==================== 风控配置（开发环境） ====================
+risk:
+  # Demo账户风控较宽松
+  max_order_size: 1.0                 # 最大手数
+  max_daily_loss: 10000               # 每日最大亏损（USD）
+  max_position_count: 10              # 最大持仓数
+
+  # 允许交易品种
+  allowed_symbols:
+    - "EURUSD"
+    - "GBPUSD"
+    - "USDJPY"
+    - "AUDUSD"
+    - "USDCAD"
+
+# ==================== 策略生成配置 ====================
+strategy:
+  # LLM配置
+  llm_provider: "openai"              # openai/anthropic
+  llm_model: "gpt-4"
+  llm_api_key: "${OPENAI_API_KEY}"    # 从环境变量读取
+  llm_temperature: 0.7
+
+  # 生成参数
+  max_strategies_per_request: 10
+  code_validation: true
+
+# ==================== 特性开关 ====================
+features:
+  enable_validator: true              # Validator服务
+  enable_execution: true              # Execution服务
+  enable_strategy_generation: true    # 策略生成
+  enable_historical_backtest: false   # 历史数据回测（Phase 1-3）
+
+# ==================== 开发工具 ====================
+dev:
+  auto_reload: true                   # 代码热重载
+  show_sql: false                     # 显示SQL语句
+  mock_mt5: false                     # 是否使用Mock MT5（false=真实MT5）

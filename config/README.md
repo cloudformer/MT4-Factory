@@ -1,163 +1,255 @@
 # 配置文件说明
 
-## 概述
+## 配置文件列表
 
-所有服务间的调用都通过配置文件中的 `service_urls` 进行管理，避免硬编码URL，便于不同环境的部署。
-
-MT5连接配置统一在 `mt5` 配置节中管理，支持完整的连接参数和代理设置。
-
-## 配置文件
-
-- `development.yaml` - 开发环境配置（本地调试）
-- `production.yaml` - 生产环境配置示例
-
-## 服务URL配置方式
-
-### 方式1: 本地开发（默认）
-```yaml
-service_urls:
-  strategy: "http://127.0.0.1:8001"
-  orchestrator: "http://127.0.0.1:8002"
-  execution: "http://127.0.0.1:8003"
-  dashboard: "http://127.0.0.1:8000"
+```
+config/
+├── mac.yaml                    # Mac本地开发（UI测试）
+├── windows.yaml                # Windows完整测试
+├── cloud.yaml                  # 云端生产环境
+├── README.md                   # 本文档
+└── CONFIGURATION_GUIDE.md      # 详细配置指南
 ```
 
-### 方式2: 独立域名部署
+---
+
+## 三个环境定位
+
+| 环境 | 配置文件 | 数据库 | 用途 | Validator | 历史数据 |
+|------|---------|--------|------|-----------|---------|
+| **Mac** | `mac.yaml` | SQLite | UI开发测试 | ❌ disabled | ❌ disabled |
+| **Windows** | `windows.yaml` | PostgreSQL | 完整功能测试 | ✅ enabled | ✅ Phase 1 |
+| **Cloud** | `cloud.yaml` | PostgreSQL RDS | 生产部署 | ✅ enabled | ✅ Phase 3 |
+
+---
+
+## 配置注释约定 ⭐
+
+所有配置文件使用**统一的注释标记**来说明适用环境：
+
+### 注释标记
+
+| 标记 | 含义 |
+|------|------|
+| `Mac only` | 仅Mac环境使用 |
+| `Windows only` | 仅Windows环境使用 |
+| `Cloud only` | 仅Cloud生产环境使用 |
+| `Windows and Cloud` | Windows和Cloud都使用，Mac不用 |
+| `All` | 所有环境都使用 |
+
+### 配置示例
+
 ```yaml
-service_urls:
-  strategy: "https://strategy.evotrade.com"
-  orchestrator: "https://orchestrator.evotrade.com"
-  execution: "https://execution.evotrade.com"
-  dashboard: "https://dashboard.evotrade.com"
+# ==================== 历史数据配置 ====================
+# Windows and Cloud: 导入历史K线数据用于策略验证
+# Mac: disabled（Mac不使用历史数据）
+historical_data:
+  enabled: true           # Mac: false | Windows: true (Phase 1) | Cloud: true (Phase 3)
+  phase: 1                # Windows: 1 | Cloud: 3
+
+  # 自动更新配置 (Cloud only)
+  auto_update: false      # Mac/Windows: false | Cloud: true
+  update_schedule: "0 2 * * *"  # Cloud only: 凌晨2点更新
+  update_days: 1          # Cloud only: 更新最近N天数据
+
+  # 数据库优化 (Cloud only - Phase 3)
+  use_partitioning: false # Mac/Windows: false | Cloud: true
+  partition_by: "year"    # Cloud only: 按年分区
 ```
 
-### 方式3: API网关 + 路径前缀
-```yaml
-service_urls:
-  strategy: "https://api.evotrade.com/strategy"
-  orchestrator: "https://api.evotrade.com/orchestrator"
-  execution: "https://api.evotrade.com/execution"
-  dashboard: "https://api.evotrade.com/dashboard"
-```
+**关键**：
+1. 每个配置块顶部注释说明适用范围
+2. 配置项注释中说明每个环境的值
+3. 子配置块标注特定环境（如 `Cloud only`）
 
-### 方式4: Kubernetes/Docker内网服务发现
-```yaml
-service_urls:
-  strategy: "http://strategy-service:8001"
-  orchestrator: "http://orchestrator-service:8002"
-  execution: "http://execution-service:8003"
-  dashboard: "http://dashboard-service:8000"
-```
+---
 
-## 切换环境
+## 环境切换
 
-### 方法1: 设置环境变量
+### 通过DEVICE环境变量
+
 ```bash
-export ENV=production
-python -m uvicorn src.services.dashboard.api.app:app --host 0.0.0.0 --port 8000
+# Mac环境
+export DEVICE=mac
+python app.py
+
+# Windows环境
+set DEVICE=windows
+python app.py
+
+# Cloud环境
+export DEVICE=cloud
+python app.py
 ```
 
-### 方法2: 直接指定配置文件（需要在settings.py中实现）
-```bash
-python -m uvicorn src.services.dashboard.api.app:app --host 0.0.0.0 --port 8000 --env-file config/production.yaml
-```
+系统自动加载对应配置：
+- `DEVICE=mac` → `config/mac.yaml`
+- `DEVICE=windows` → `config/windows.yaml`
+- `DEVICE=cloud` → `config/cloud.yaml`
 
-## 服务调用示例
+### 默认环境
 
-### Dashboard调用Orchestrator
+不设置`DEVICE`时，默认使用`windows`配置：
+
 ```python
-from src.common.config.settings import settings
-
-# 从配置读取URL
-orchestrator_url = settings.get("service_urls", {}).get("orchestrator", "http://127.0.0.1:8002")
-
-# 调用API
-async with httpx.AsyncClient() as client:
-    response = await client.get(f"{orchestrator_url}/registration/summary")
+# src/common/config/settings.py
+self.env = env or os.getenv('DEVICE', 'windows')
 ```
 
-### CLI脚本调用
-```python
-from src.common.config.settings import settings
+---
 
-# 自动读取配置中的URL
-orchestrator_url = settings.get("service_urls", {}).get("orchestrator", "http://127.0.0.1:8002")
-response = requests.get(f"{orchestrator_url}/registration/candidates")
-```
+## 核心配置差异
 
-## 受影响的文件
+### 数据库
 
-已修改为从配置读取URL的文件：
-- `src/services/dashboard/api/routes/data.py` - Dashboard数据路由
-- `src/services/dashboard/api/routes/registration.py` - Dashboard注册路由
-- `scripts/manage_registration.py` - CLI管理脚本
+| 环境 | 类型 | 连接方式 |
+|------|------|---------|
+| Mac | SQLite | `sqlite:///./data/evo_trade.db` |
+| Windows | PostgreSQL | Docker服务名：`postgres` |
+| Cloud | PostgreSQL RDS | 远程：`your-rds.amazonaws.com` |
 
-## 未来扩展
+### Validator
 
-配置统一后，可以轻松实现：
-1. 多环境部署（dev/staging/production）
-2. 服务负载均衡（通过改变URL指向负载均衡器）
-3. 灰度发布（部分流量指向新版本服务）
-4. 服务网格集成（Istio、Linkerd等）
-5. 跨区域部署（不同地区使用不同的service_urls）
+| 环境 | 启用 | 数据来源 | 并发数 |
+|------|------|---------|--------|
+| Mac | ❌ | - | - |
+| Windows | ✅ | `realtime` (实时MT5) | 20 |
+| Cloud | ✅ | `database` (历史数据库) | 50 |
 
-## MT5配置说明
+### 历史数据
 
-### 基础配置
+| 环境 | 启用 | Phase | 自动更新 | 分区表 |
+|------|------|-------|---------|--------|
+| Mac | ❌ | - | - | - |
+| Windows | ✅ | 1 (67K行) | ❌ | ❌ |
+| Cloud | ✅ | 3 (50M行) | ✅ | ✅ |
+
+### MT5连接
+
+所有MT5主机在`mt5_hosts`中配置，Validator和Execution通过`mt5_host`参数选择使用哪个主机：
+
 ```yaml
-mt5:
-  company: "MetaQuotes Ltd."       # 经纪商公司名
-  server: "MetaQuotes-Demo"        # 服务器名称
-  login: 5049130509                # 账号
-  password: "-ySbKy4z"             # 主密码（交易模式）
-  investor_password: "Fn@4ElKo"    # 投资者密码（只读模式）
+mt5_hosts:
+  demo_1:                  # MT5主机1
+    host: "..."
+    login: "..."
+    # ...
+  real_1:                  # MT5主机2
+    host: "..."
+    login: "..."
+    # ...
+
+validator:
+  mt5_host: "demo_1"      # 选择使用demo_1
+
+execution:
+  mt5_host: "real_1"      # 选择使用real_1（可自由切换）
 ```
 
-### 高级配置（Windows生产环境）
-```yaml
-mt5:
-  path: "C:/Program Files/MetaTrader 5/terminal64.exe"  # MT5终端路径
-  timeout: 60000   # 连接超时（毫秒）
-  portable: false  # 是否使用便携模式
-```
+详见：[MT5主机配置指南](./MT5_HOSTS_GUIDE.md)
 
-### 代理配置（可选）
-```yaml
-mt5:
-  proxy:
-    enabled: true
-    host: "proxy.example.com"  # 代理服务器地址
-    port: 8888                 # 代理端口
-    type: "HTTP"               # 代理类型: HTTP/HTTPS/SOCKS5
-```
+---
 
-### 使用模式
+## 配置验证
 
-**1. 交易模式（默认）**
-- 使用主密码（password）
-- 拥有完整交易权限
-- 可以下单、平仓、修改订单
+### 检查当前配置
 
-**2. 投资者模式（只读）**
-- 使用投资者密码（investor_password）
-- 只能查看账户和持仓
-- 无法进行交易操作
-- 适用于监控和数据采集
-
-### 测试连接
 ```bash
-# 使用测试工具
-python scripts/test_mt5_connection.py
-
-# 或者通过Execution服务健康检查
-curl http://localhost:8003/health
+export DEVICE=windows
+python -c "
+from src.common.config.settings import settings
+print(f'环境: {settings.env}')
+print(f'数据库: {settings.database}')
+print(f'Validator: {settings.get(\"validator\", {}).get(\"enabled\")}')
+print(f'历史数据: {settings.get(\"historical_data\", {}).get(\"enabled\")}')
+"
 ```
 
-## 注意事项
+### 查找特定环境配置
 
-1. **默认值**: 所有读取配置的地方都提供了默认值，确保向后兼容
-2. **环境变量**: production.yaml中的敏感信息（如MT5密码）使用 `${VAR_NAME}` 语法，运行时从环境变量读取
-3. **配置优先级**: 环境变量 > 配置文件 > 默认值
-4. **网络策略**: 生产环境需要配置防火墙规则，只允许服务间内网通信
-5. **平台限制**: 真实MT5连接仅支持Windows，macOS/Linux自动使用Mock客户端
-6. **密码安全**: 生产环境请使用环境变量存储密码，不要直接写在配置文件中
+```bash
+# 查找Cloud专用配置
+grep -n "Cloud only" config/*.yaml
+
+# 查找Windows和Cloud共用配置
+grep -n "Windows and Cloud" config/*.yaml
+```
+
+---
+
+## 配置最佳实践
+
+### 1. 保持结构一致
+
+所有三个配置文件**必须包含相同的配置项**，即使某些环境不使用：
+
+✅ **正确**：
+```yaml
+# mac.yaml
+historical_data:
+  enabled: false      # Mac不使用，但配置项保留
+  phase: 1
+  auto_update: false
+```
+
+❌ **错误**：
+```yaml
+# mac.yaml
+# 完全删除historical_data配置
+```
+
+### 2. 使用环境变量（生产环境）
+
+```yaml
+# Cloud配置使用环境变量
+database:
+  password: "${POSTGRES_PASSWORD}"    # ✅ 环境变量
+
+# 不要硬编码密码
+database:
+  password: "my_password_123"         # ❌ 不安全
+```
+
+### 3. 清晰的注释
+
+```yaml
+# ✅ 好的注释
+concurrency: 20     # Mac: N/A | Windows: 20 | Cloud: 50
+
+# ❌ 不清楚的注释
+concurrency: 20     # 并发数
+```
+
+---
+
+## 常见问题
+
+### Q: 为什么所有配置文件都要包含相同的配置项？
+
+A: 便于对比和维护。可以并排查看三个文件，快速找到差异。防止遗漏某个环境的配置。
+
+### Q: Mac环境为什么有那么多disabled的配置？
+
+A: Mac只用于UI开发测试，不需要完整功能。保留配置项是为了结构统一。
+
+### Q: Windows和Cloud的PostgreSQL配置一样吗？
+
+A: 是的！除了连接地址（Docker vs RDS），其他配置（索引、分区表）完全一致。
+
+### Q: 如何从Windows迁移到Cloud？
+
+A: 复制`windows.yaml`为基础，修改：
+1. `database.host` → RDS地址
+2. `mt5.host` → 远程VPS IP
+3. `historical_data.phase` → 3
+4. `historical_data.auto_update` → true
+5. 密码改为环境变量
+
+---
+
+## 相关文档
+
+- [配置详细指南](./CONFIGURATION_GUIDE.md) - 详细的配置说明
+- [环境配置说明](../docs/ENVIRONMENT_SETUP.md) - 环境定位和使用
+- [历史数据指南](../docs/HISTORICAL_DATA_GUIDE.md) - Phase 1/2/3详解
+- [启动指南](../docs/STARTUP_GUIDE.md) - 快速启动

@@ -1,24 +1,304 @@
-INFO:     Started server process [88147]
+INFO:     Started server process [7007]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
-INFO:     127.0.0.1:51796 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51796 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:51796 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51797 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51797 - "GET /api/strategies HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51797 - "GET /api/strategies HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51797 - "GET /api/signals HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51796 - "GET /api/signals HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51797 - "GET /api/trades HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51796 - "GET /api/trades HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52136 - "GET /?tab=trades&account_id=5049130509&strategy_status=archived HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52136 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
-INFO:     127.0.0.1:52136 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52137 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52137 - "GET /api/strategies HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52136 - "GET /api/strategies HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52136 - "GET /api/signals HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52137 - "GET /api/signals HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52136 - "GET /api/trades HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52137 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49354 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49414 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49414 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49414 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49416 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49416 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49414 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49414 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49414 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49414 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49414 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49414 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49416 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49416 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49414 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49416 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49414 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49416 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49414 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49416 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49414 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50494 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50497 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50494 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50494 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50497 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50494 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50497 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50494 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50497 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50494 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50494 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50497 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50494 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50497 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50494 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50497 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50494 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50497 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50494 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50497 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61235 - "POST /api/actions/generate-strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61235 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61235 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61235 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61235 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61235 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61235 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61235 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61235 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61235 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61238 - "POST /api/actions/generate-strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61235 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61238 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61235 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61238 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61235 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61238 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61235 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61238 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61235 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61689 - "POST /api/registration/activate/STR_2ef57f07 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61689 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61689 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61689 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61689 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61689 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61689 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61689 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61689 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61689 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55271 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55271 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55271 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55271 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55271 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55271 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55271 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55271 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55271 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55271 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55271 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55271 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55271 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55271 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55271 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55271 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55270 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "POST /api/actions/generate-signal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "POST /api/actions/generate-signal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "POST /api/actions/generate-signal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "POST /api/actions/generate-signal HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/registration/evaluate/STR_2ef57f07 HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:55457 - "GET /api/registration/evaluate/STR_2ef57f07 HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:55457 - "GET /api/registration/evaluate/STR_2ef57f07 HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:55457 - "GET /api/registration/evaluate/STR_2ef57f07 HTTP/1.1" 500 Internal Server Error
+INFO:     127.0.0.1:55457 - "POST /api/registration/deactivate/STR_2ef57f07 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55457 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63321 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63321 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63321 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63321 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63321 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63321 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63321 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63321 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63321 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63321 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63321 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63321 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63321 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63321 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63321 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63321 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63321 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63321 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63321 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "POST /api/actions/generate-strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63319 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54181 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54181 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54182 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54182 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54181 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54181 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54181 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54181 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54181 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54181 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54182 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54182 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54181 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54182 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54181 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54182 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54181 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54182 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54182 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+WARNING:  Unsupported upgrade request.
+WARNING:  No supported WebSocket library detected. Please use "pip install 'uvicorn[standard]'", or install 'websockets' or 'wsproto' manually.
+INFO:     127.0.0.1:54201 - "GET /ws HTTP/1.1" 404 Not Found
+WARNING:  Unsupported upgrade request.
+WARNING:  No supported WebSocket library detected. Please use "pip install 'uvicorn[standard]'", or install 'websockets' or 'wsproto' manually.
+INFO:     127.0.0.1:54203 - "GET /ws HTTP/1.1" 404 Not Found
+WARNING:  Unsupported upgrade request.
+WARNING:  No supported WebSocket library detected. Please use "pip install 'uvicorn[standard]'", or install 'websockets' or 'wsproto' manually.
+INFO:     127.0.0.1:54213 - "GET /ws HTTP/1.1" 404 Not Found
+WARNING:  Unsupported upgrade request.
+WARNING:  No supported WebSocket library detected. Please use "pip install 'uvicorn[standard]'", or install 'websockets' or 'wsproto' manually.
+INFO:     127.0.0.1:54223 - "GET /ws HTTP/1.1" 404 Not Found
+WARNING:  Unsupported upgrade request.
+WARNING:  No supported WebSocket library detected. Please use "pip install 'uvicorn[standard]'", or install 'websockets' or 'wsproto' manually.
+INFO:     127.0.0.1:54251 - "GET /ws HTTP/1.1" 404 Not Found
+WARNING:  Unsupported upgrade request.
+WARNING:  No supported WebSocket library detected. Please use "pip install 'uvicorn[standard]'", or install 'websockets' or 'wsproto' manually.
+INFO:     127.0.0.1:54294 - "GET /ws HTTP/1.1" 404 Not Found
+WARNING:  Unsupported upgrade request.
+WARNING:  No supported WebSocket library detected. Please use "pip install 'uvicorn[standard]'", or install 'websockets' or 'wsproto' manually.
+INFO:     127.0.0.1:54381 - "GET /ws HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57692 - "GET /?tab=trades&account_id=5049130509 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57692 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57693 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57693 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57692 - "GET /api/strategies HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57692 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57692 - "GET /api/accounts HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57692 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57692 - "GET /api/signals HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57692 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57693 - "GET /api/trades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57693 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57693 - "GET /api/services/execution/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57692 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57692 - "GET /api/services/validator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57693 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57692 - "GET /api/services/orchestrator/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57693 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57692 - "GET /api/mt5-hosts HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57693 - "GET /api/mt5/workers HTTP/1.1" 200 OK
+WARNING:  Unsupported upgrade request.
+WARNING:  No supported WebSocket library detected. Please use "pip install 'uvicorn[standard]'", or install 'websockets' or 'wsproto' manually.
+INFO:     127.0.0.1:57712 - "GET /ws HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57693 - "GET /api/mt5-hosts HTTP/1.1" 404 Not Found
+WARNING:  Unsupported upgrade request.
+WARNING:  No supported WebSocket library detected. Please use "pip install 'uvicorn[standard]'", or install 'websockets' or 'wsproto' manually.
+INFO:     127.0.0.1:57714 - "GET /ws HTTP/1.1" 404 Not Found
+WARNING:  Unsupported upgrade request.
+WARNING:  No supported WebSocket library detected. Please use "pip install 'uvicorn[standard]'", or install 'websockets' or 'wsproto' manually.
+INFO:     127.0.0.1:57725 - "GET /ws HTTP/1.1" 404 Not Found
+WARNING:  Unsupported upgrade request.
+WARNING:  No supported WebSocket library detected. Please use "pip install 'uvicorn[standard]'", or install 'websockets' or 'wsproto' manually.
+INFO:     127.0.0.1:57735 - "GET /ws HTTP/1.1" 404 Not Found
+WARNING:  Unsupported upgrade request.
+WARNING:  No supported WebSocket library detected. Please use "pip install 'uvicorn[standard]'", or install 'websockets' or 'wsproto' manually.
+INFO:     127.0.0.1:57762 - "GET /ws HTTP/1.1" 404 Not Found
+WARNING:  Unsupported upgrade request.
+WARNING:  No supported WebSocket library detected. Please use "pip install 'uvicorn[standard]'", or install 'websockets' or 'wsproto' manually.
+INFO:     127.0.0.1:57804 - "GET /ws HTTP/1.1" 404 Not Found
+WARNING:  Unsupported upgrade request.
+WARNING:  No supported WebSocket library detected. Please use "pip install 'uvicorn[standard]'", or install 'websockets' or 'wsproto' manually.
+INFO:     127.0.0.1:57886 - "GET /ws HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:58095 - "POST /api/mt5-hosts HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:58126 - "POST /api/mt5-hosts HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:58516 - "GET /api/mt5-hosts HTTP/1.1" 404 Not Found
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7007]

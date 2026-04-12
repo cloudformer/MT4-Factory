@@ -4,6 +4,8 @@ from .signal import Signal, Direction, SignalStatus
 from .trade import Trade
 from .account import Account
 from .account_allocation import AccountAllocation
+from .historical_bar import HistoricalBar
+from .mt5_host import MT5Host
 
 __all__ = [
     'Strategy',
@@ -13,5 +15,7 @@ __all__ = [
     'SignalStatus',
     'Trade',
     'Account',
-    'AccountAllocation'
+    'AccountAllocation',
+    'HistoricalBar',
+    'MT5Host'
 ]

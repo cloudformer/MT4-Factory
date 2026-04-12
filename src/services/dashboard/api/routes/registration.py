@@ -1,13 +1,25 @@
-"""策略注册管理路由 - 代理Orchestrator的Registration API"""
-from fastapi import APIRouter, HTTPException
+"""策略注册管理路由 - 直接操作数据库"""
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from typing import Optional
 import httpx
 
 from src.common.config.settings import settings
+from src.common.database.connection import db
+from src.common.models.strategy import Strategy, StrategyStatus
+from src.common.models.mt5_host import MT5Host
 
 router = APIRouter(prefix="/registration", tags=["registration"])
 
 # 从配置读取Orchestrator服务URL
 ORCHESTRATOR_URL = settings.get("service_urls", {}).get("orchestrator", "http://127.0.0.1:8002")
+
+
+def get_db_session():
+    """获取数据库Session"""
+    with db.session_scope() as session:
+        yield session
 
 
 @router.get("/summary")
@@ -47,54 +59,45 @@ async def get_active_strategies():
 
 
 @router.post("/activate/{strategy_id}")
-async def activate_strategy(strategy_id: str, force: bool = False):
+def activate_strategy(strategy_id: str, session: Session = Depends(get_db_session)):
     """激活策略"""
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.post(
-                f"{ORCHESTRATOR_URL}/registration/activate/{strategy_id}",
-                json={"force": force}
-            )
-            response.raise_for_status()
-            return response.json()
-        except httpx.HTTPStatusError as e:
-            raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"操作失败: {str(e)}")
+    strategy = session.query(Strategy).filter(Strategy.id == strategy_id).first()
+
+    if not strategy:
+        return {"success": False, "message": "策略不存在", "strategy_id": strategy_id}
+
+    strategy.status = StrategyStatus.ACTIVE
+    session.commit()
+
+    return {"success": True, "message": f"策略 {strategy.name} 已激活", "strategy_id": strategy_id}
 
 
 @router.post("/deactivate/{strategy_id}")
-async def deactivate_strategy(strategy_id: str, reason: str = None):
+def deactivate_strategy(strategy_id: str, session: Session = Depends(get_db_session)):
     """停用策略"""
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.post(
-                f"{ORCHESTRATOR_URL}/registration/deactivate/{strategy_id}",
-                json={"reason": reason}
-            )
-            response.raise_for_status()
-            return response.json()
-        except httpx.HTTPStatusError as e:
-            raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"操作失败: {str(e)}")
+    strategy = session.query(Strategy).filter(Strategy.id == strategy_id).first()
+
+    if not strategy:
+        return {"success": False, "message": "策略不存在", "strategy_id": strategy_id}
+
+    strategy.status = StrategyStatus.CANDIDATE
+    session.commit()
+
+    return {"success": True, "message": f"策略 {strategy.name} 已停用", "strategy_id": strategy_id}
 
 
 @router.post("/archive/{strategy_id}")
-async def archive_strategy(strategy_id: str, reason: str = None):
+def archive_strategy(strategy_id: str, session: Session = Depends(get_db_session)):
     """归档策略（永久停用）"""
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.post(
-                f"{ORCHESTRATOR_URL}/registration/archive/{strategy_id}",
-                json={"reason": reason}
-            )
-            response.raise_for_status()
-            return response.json()
-        except httpx.HTTPStatusError as e:
-            raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"操作失败: {str(e)}")
+    strategy = session.query(Strategy).filter(Strategy.id == strategy_id).first()
+
+    if not strategy:
+        return {"success": False, "message": "策略不存在", "strategy_id": strategy_id}
+
+    strategy.status = StrategyStatus.ARCHIVED
+    session.commit()
+
+    return {"success": True, "message": f"策略 {strategy.name} 已归档", "strategy_id": strategy_id}
 
 
 @router.get("/evaluate/{strategy_id}")
@@ -122,28 +125,69 @@ async def batch_evaluate_candidates():
 
 
 @router.post("/restore/{strategy_id}")
-async def restore_strategy(strategy_id: str):
+def restore_strategy(strategy_id: str, session: Session = Depends(get_db_session)):
     """恢复归档的策略到候选状态"""
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.post(f"{ORCHESTRATOR_URL}/registration/restore/{strategy_id}")
-            response.raise_for_status()
-            return response.json()
-        except httpx.HTTPStatusError as e:
-            raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"恢复失败: {str(e)}")
+    strategy = session.query(Strategy).filter(Strategy.id == strategy_id).first()
+
+    if not strategy:
+        return {"success": False, "message": "策略不存在", "strategy_id": strategy_id}
+
+    strategy.status = StrategyStatus.CANDIDATE
+    session.commit()
+
+    return {"success": True, "message": f"策略 {strategy.name} 已恢复到候选状态", "strategy_id": strategy_id}
 
 
 @router.delete("/delete/{strategy_id}")
-async def delete_strategy(strategy_id: str):
+def delete_strategy(strategy_id: str, session: Session = Depends(get_db_session)):
     """永久删除策略"""
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.delete(f"{ORCHESTRATOR_URL}/registration/delete/{strategy_id}")
-            response.raise_for_status()
-            return response.json()
-        except httpx.HTTPStatusError as e:
-            raise HTTPException(status_code=e.response.status_code, detail=e.response.text)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"删除失败: {str(e)}")
+    strategy = session.query(Strategy).filter(Strategy.id == strategy_id).first()
+
+    if not strategy:
+        return {"success": False, "message": "策略不存在", "strategy_id": strategy_id}
+
+    strategy_name = strategy.name
+    session.delete(strategy)
+    session.commit()
+
+    return {"success": True, "message": f"策略 {strategy_name} 已删除", "strategy_id": strategy_id}
+
+
+class BindMT5HostRequest(BaseModel):
+    """绑定MT5主机请求"""
+    mt5_host_id: Optional[str] = None
+
+
+@router.post("/bind-mt5/{strategy_id}")
+def bind_mt5_host(strategy_id: str, request: BindMT5HostRequest, session: Session = Depends(get_db_session)):
+    """
+    绑定策略到MT5主机
+
+    如果mt5_host_id为null，则解绑
+    """
+    strategy = session.query(Strategy).filter(Strategy.id == strategy_id).first()
+
+    if not strategy:
+        return {"success": False, "message": "策略不存在", "strategy_id": strategy_id}
+
+    # 如果指定了MT5 host，验证其存在
+    if request.mt5_host_id:
+        mt5_host = session.query(MT5Host).filter(MT5Host.id == request.mt5_host_id).first()
+        if not mt5_host:
+            return {"success": False, "message": f"MT5主机不存在: {request.mt5_host_id}"}
+
+        strategy.mt5_host_id = request.mt5_host_id
+        message = f"策略 {strategy.name} 已绑定到 {mt5_host.name}"
+    else:
+        # 解绑
+        strategy.mt5_host_id = None
+        message = f"策略 {strategy.name} 已解绑MT5主机"
+
+    session.commit()
+
+    return {
+        "success": True,
+        "message": message,
+        "strategy_id": strategy_id,
+        "mt5_host_id": strategy.mt5_host_id
+    }

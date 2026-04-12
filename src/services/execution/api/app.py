@@ -45,6 +45,10 @@ app.add_middleware(
 # 注册路由
 app.include_router(trade.router)
 
+# 注册增强路由（新版API）
+from .routes import enhanced_trade
+app.include_router(enhanced_trade.router)
+
 
 @app.get("/")
 def health_check():

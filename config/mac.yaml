@@ -1,0 +1,320 @@
+# Mac本地开发环境配置
+# 用途：Dashboard UI开发和测试，不运行完整功能
+# 使用SQLite数据库，轻量级，无需Docker
+
+# ==================== 环境标识 ====================
+env: mac                                # Mac: mac | Windows: windows | Cloud: production
+
+# ==================== 服务配置 ====================
+# Mac: 本地Python进程 | Windows/Cloud: Docker容器
+services:
+  # 容器化运行（Mac不使用容器）
+  use_containers: false                 # Mac: false (本地进程) | Windows: true | Cloud: true
+
+  # Dashboard服务
+  dashboard:
+    enabled: true                       # Mac: true (使用Mock数据) | Windows: true | Cloud: true
+    host: "0.0.0.0"
+    port: 8001
+    url: "http://127.0.0.1:8001"
+    debug: true                         # Mac: true | Windows: true | Cloud: false
+
+  # Strategy服务
+  strategy:
+    enabled: true                       # Mac: true (使用Mock数据) | Windows: true | Cloud: true
+    host: "0.0.0.0"
+    port: 8000
+    url: "http://127.0.0.1:8000"
+
+  # Orchestrator服务
+  orchestrator:
+    enabled: true                       # Mac: true (使用Mock数据) | Windows: true | Cloud: true
+    host: "0.0.0.0"
+    port: 8002
+    url: "http://127.0.0.1:8002"
+
+  # Execution服务
+  execution:
+    enabled: true                       # Mac: true (使用Mock数据) | Windows: true | Cloud: true
+    host: "0.0.0.0"
+    port: 8003
+    url: "http://127.0.0.1:8003"
+
+  # Validator服务
+  validator:
+    enabled: true                       # Mac: true (使用Mock数据) | Windows: true | Cloud: true
+    host: "0.0.0.0"
+    port: 8004
+    url: "http://127.0.0.1:8004"
+
+# ==================== 数据库配置 ====================
+database:
+  # 数据库容器启用（Mac/Windows启用容器，Cloud使用外部RDS）
+  container_enabled: false              # Mac: false (SQLite文件) | Windows: true (Postgres容器) | Cloud: false (外部RDS)
+
+  # 数据库类型
+  type: "sqlite"                        # Mac: sqlite | Windows: postgresql | Cloud: postgresql
+
+  # PostgreSQL配置 (Windows and Cloud)
+  host: "localhost"                     # Mac: N/A | Windows: postgres | Cloud: RDS地址
+  port: 5432                            # Mac: N/A | Windows: 5432 | Cloud: 5432
+  database: "evo_trade"                 # Mac: N/A | Windows: evo_trade | Cloud: evo_trade
+  user: "evo_trade_user"                # Mac: N/A | Windows: evo_trade_user | Cloud: evo_trade_user
+  password: ""                          # Mac: N/A | Windows: evo_trade_pass_dev_2024 | Cloud: ${POSTGRES_PASSWORD}
+
+  # SQLite配置 (Mac only)
+  sqlite_path: "./data/evo_trade.db"    # Mac: ./data/evo_trade.db | Windows: N/A | Cloud: N/A
+
+  # 连接池配置
+  pool_size: 5                          # Mac: 5 | Windows: 50 | Cloud: 50
+  max_overflow: 10                      # Mac: 10 | Windows: 50 | Cloud: 50
+  pool_pre_ping: true                   # All: true
+  echo: false                           # All: false
+
+# ==================== MT5主机配置 ====================
+# 统一管理所有MT5主机（Demo和Real）
+mt5_hosts:
+  # Demo验证主机（Validator使用）
+  demo_worker_1:
+    enabled: true                       # Mac: true (Mock) | Windows: true | Cloud: true
+    name: "Demo Worker 1"
+    type: "demo"
+    host: "192.168.1.101"               # Mac: 模拟IP | Windows: host.docker.internal | Cloud: 真实IP
+    port: 9090
+    login: 5049130509                   # Mock账号
+    password: "mock_password"
+    server: "MetaQuotes-Demo"
+    api_key: "demo_key_mock"
+    timeout: 10
+    use_investor: true
+    tags: ["demo", "validation"]
+    weight: 1
+    # Mock状态数据
+    mock_status: "connected"
+    mock_balance: 100000.0
+    mock_equity: 100123.45
+    mock_positions: 3
+
+  demo_worker_2:
+    enabled: false                      # Mac: false | Windows: false | Cloud: true
+    name: "Demo Worker 2"
+    type: "demo"
+    host: "192.168.1.102"
+    port: 9090
+    login: 5049130510
+    password: "mock_password"
+    server: "MetaQuotes-Demo"
+    api_key: "demo_key_mock_2"
+    timeout: 10
+    use_investor: true
+    tags: ["demo", "validation", "backup"]
+    weight: 1
+    # Mock状态数据
+    mock_status: "disabled"
+    mock_balance: 100000.0
+    mock_equity: 100000.0
+    mock_positions: 0
+
+  # 真实交易主机（Execution使用）
+  real_worker_icm_1:
+    enabled: true                       # Mac: true (Mock) | Windows: true | Cloud: true
+    name: "ICMarkets Real Worker 1"
+    type: "real"
+    host: "52.10.20.101"                # Mac: 模拟IP | Windows: host.docker.internal | Cloud: 真实IP
+    port: 9090
+    login: 8012345678
+    password: "mock_real_password"
+    server: "ICMarkets-Live"
+    api_key: "real_key_mock"
+    timeout: 15
+    use_investor: false
+    tags: ["real", "icmarkets", "primary"]
+    weight: 2
+    # Mock状态数据
+    mock_status: "connected"
+    mock_balance: 10000.0
+    mock_equity: 10234.56
+    mock_positions: 5
+
+  real_worker_icm_2:
+    enabled: true                       # Mac: true (Mock) | Windows: false | Cloud: true
+    name: "ICMarkets Real Worker 2"
+    type: "real"
+    host: "52.10.20.102"
+    port: 9090
+    login: 8012345679
+    password: "mock_real_password"
+    server: "ICMarkets-Live"
+    api_key: "real_key_mock_2"
+    timeout: 15
+    use_investor: false
+    tags: ["real", "icmarkets", "backup"]
+    weight: 1
+    # Mock状态数据
+    mock_status: "disconnected"
+    mock_error: "Connection timeout"
+    mock_balance: 10000.0
+    mock_equity: 10000.0
+    mock_positions: 0
+
+  real_worker_pep_1:
+    enabled: false                      # Mac: false | Windows: false | Cloud: true
+    name: "Pepperstone Real Worker 1"
+    type: "real"
+    host: "52.10.20.103"
+    port: 9090
+    login: 9012345678
+    password: "mock_real_password"
+    server: "Pepperstone-Live"
+    api_key: "real_key_mock_3"
+    timeout: 15
+    use_investor: false
+    tags: ["real", "pepperstone"]
+    weight: 1
+    # Mock状态数据
+    mock_status: "disabled"
+    mock_balance: 5000.0
+    mock_equity: 5000.0
+    mock_positions: 0
+
+# ==================== Validator配置 ====================
+validator:
+  enabled: true                         # Mac: true (Mock) | Windows: true | Cloud: true
+  mode: "active_strategies"             # All: active_strategies
+
+  # 并发配置
+  concurrency: 20                       # Mac: 20 | Windows: 20 | Cloud: 50
+  schedule_interval: 3600               # All: 3600 (1小时)
+
+  # 账户配置
+  initial_balance: 100                  # All: 100 (USD)
+
+  # 数据获取配置
+  bars_count: 500                       # All: 500 (实时模式K线数量)
+  bars_count_db: 3000                   # All: 3000 (数据库模式K线数量)
+
+  # 数据源配置（多源混合验证）
+  # Mac环境：优先尝试MT5真实数据 → Database历史数据 → Mock兜底
+  data_sources:
+    - type: "realtime"
+      weight: 0.6                       # 最高权重：优先使用MT5真实数据
+      enabled: true
+      mt5_host: "demo_1"                # 数据库中的MT5 Host ID
+
+    - type: "database"
+      weight: 0.3                       # 次选：数据库历史数据
+      enabled: true
+
+    - type: "mock"
+      weight: 0.1                       # 兜底：Mock数据（仅在前两者都不可用时）
+      enabled: true
+
+# ==================== Worker Pool配置 ====================
+worker_pool:
+  enabled: true                         # Mac: true (Mock) | Windows: true | Cloud: true
+
+  # 负载均衡策略
+  load_balancing:
+    strategy: "weighted_round_robin"    # round_robin | weighted_round_robin | least_connections | random
+
+  # 健康检查
+  health_check_interval: 60             # 秒
+
+  # 路由规则（Mac使用Mock，不实际路由）
+  routing_rules:
+    - name: "EURUSD专用Worker"
+      condition:
+        symbol: "EURUSD"
+      target:
+        tags: ["icmarkets"]
+
+    - name: "亚洲时段优先"
+      condition:
+        trading_session: "asia"
+      target:
+        tags: ["asia"]
+
+# ==================== 历史数据配置 ====================
+historical_data:
+  enabled: false                        # Mac: false | Windows: true | Cloud: true
+  phase: 1                              # Mac: 1 | Windows: 1 | Cloud: 3
+
+  # 自动更新配置
+  auto_update:
+    enabled: false                      # Mac: false | Windows: false | Cloud: true
+    schedule: "0 2 * * *"               # All: 0 2 * * * (凌晨2点)
+    update_days: 1                      # All: 1 (更新最近N天)
+
+  # 数据库优化
+  optimization:
+    use_partitioning: false             # Mac: false | Windows: false | Cloud: true
+    partition_by: "year"                # All: year
+
+# ==================== Execution配置 ====================
+execution:
+  enabled: true                         # Mac: true (Mock) | Windows: true | Cloud: true
+
+  # MT5 Worker标签过滤
+  mt5_worker_tags: ["real"]             # 使用带"real"标签的workers
+
+  # 风控限制
+  risk_limits:
+    max_order_size: 1.0                 # Mac: 1.0 | Windows: 1.0 | Cloud: 0.1
+    max_daily_loss: 10000               # Mac: 10000 | Windows: 10000 | Cloud: 1000
+    max_position_count: 10              # Mac: 10 | Windows: 10 | Cloud: 5
+    max_drawdown_percent: 20            # Mac: 20 | Windows: 20 | Cloud: 15
+
+    # 允许交易品种（白名单）
+    allowed_symbols:
+      - "EURUSD"
+      - "GBPUSD"
+      - "USDJPY"
+
+  # Mock数据
+  mock_data:
+    total_positions: 8                  # 总持仓数
+    today_orders: 15                    # 今日订单数
+    today_pnl: 234.56                   # 今日盈亏
+
+# ==================== Orchestrator配置 ====================
+orchestrator:
+  enabled: true                         # Mac: true (Mock) | Windows: true | Cloud: true
+
+  # 策略激活阈值
+  activation:
+    min_recommendation_score: 65        # All: 65
+    min_total_return: 0.03              # All: 0.03
+    min_sharpe_ratio: 0.50              # All: 0.50
+    max_drawdown: 0.12                  # All: 0.12
+    min_win_rate: 0.35                  # All: 0.35
+    min_profit_factor: 1.5              # All: 1.5
+    min_stability_score: 0.45           # All: 0.45
+
+  # Mock数据
+  mock_data:
+    active_strategies: 12               # Active策略数
+    total_signals_today: 28             # 今日信号数
+    pending_signals: 5                  # 待处理信号数
+
+# ==================== 策略生成配置 ====================
+strategy_generation:
+  enabled: true                         # Mac: true (Mock) | Windows: true | Cloud: true
+
+  # LLM配置
+  llm:
+    provider: "openai"                  # Mac: openai | Windows: openai | Cloud: anthropic
+    model: "gpt-4"                      # Mac: gpt-4 | Windows: gpt-4 | Cloud: claude-3-sonnet-20240229
+    api_key: "${OPENAI_API_KEY}"        # Mac: ${OPENAI_API_KEY} | Windows: ${OPENAI_API_KEY} | Cloud: ${ANTHROPIC_API_KEY}
+    temperature: 0.7                    # All: 0.7
+
+  # 生成参数
+  generation:
+    max_strategies_per_request: 10      # All: 10
+    code_validation: true               # All: true
+
+  # Mock数据
+  mock_data:
+    total_generated: 156                # 总生成策略数
+    today_generated: 8                  # 今日生成数
+    success_rate: 0.87                  # 成功率
+

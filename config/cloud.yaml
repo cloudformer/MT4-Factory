@@ -1,0 +1,206 @@
+# 云端生产环境配置
+# 用途：云服务器7x24运行
+# 场景：Linux服务器（所有业务服务容器）+ Windows VPS（MT5 Worker）
+
+# ==================== 环境标识 ====================
+env: production                         # Mac: mac | Windows: windows | Cloud: production
+
+# ==================== 服务配置 ====================
+# Mac: 本地Python进程 | Windows/Cloud: Docker容器
+services:
+  # 容器化运行（Mac不使用容器）
+  use_containers: true                  # Mac: false (本地进程) | Windows: true | Cloud: true
+
+  # Dashboard服务
+  dashboard:
+    enabled: true                       # Mac: true | Windows: true | Cloud: true
+    container: "dashboard"              # Mac: N/A | Windows: dashboard | Cloud: dashboard
+    host: "0.0.0.0"
+    port: 8001
+    url: "http://dashboard:8001"        # Mac: http://127.0.0.1:8001 | Windows/Cloud: http://dashboard:8001
+    debug: false                        # Mac: true | Windows: true | Cloud: false
+
+  # Orchestrator服务
+  orchestrator:
+    enabled: true                       # Mac: false | Windows: true | Cloud: true
+    container: "orchestrator"           # Mac: N/A | Windows: orchestrator | Cloud: orchestrator
+    host: "0.0.0.0"
+    port: 8002
+    url: "http://orchestrator:8002"     # Mac: http://127.0.0.1:8002 | Windows/Cloud: http://orchestrator:8002
+
+  # Strategy服务
+  strategy:
+    enabled: true                       # Mac: false | Windows: true | Cloud: true
+    container: "strategy"               # Mac: N/A | Windows: strategy | Cloud: strategy
+    host: "0.0.0.0"
+    port: 8000
+    url: "http://strategy:8000"         # Mac: http://127.0.0.1:8000 | Windows/Cloud: http://strategy:8000
+
+  # Execution服务
+  execution:
+    enabled: true                       # Mac: false | Windows: false | Cloud: true
+    container: "execution"              # Mac: N/A | Windows: execution | Cloud: execution
+    host: "0.0.0.0"
+    port: 8003
+    url: "http://execution:8003"        # Mac: http://127.0.0.1:8003 | Windows/Cloud: http://execution:8003
+
+  # Validator服务
+  validator:
+    enabled: true                       # Mac: false | Windows: true | Cloud: true
+    container: "validator"              # Mac: N/A | Windows: validator | Cloud: validator
+    host: "0.0.0.0"
+    port: 8080
+    url: "http://validator:8080"        # Mac: http://127.0.0.1:8080 | Windows/Cloud: http://validator:8080
+
+# ==================== 数据库配置 ====================
+database:
+  # 数据库容器启用（Mac/Windows启用容器，Cloud使用外部RDS）
+  container_enabled: false              # Mac: false (SQLite文件) | Windows: true (Postgres容器) | Cloud: false (外部RDS)
+
+  # 数据库类型
+  type: "postgresql"                    # Mac: sqlite | Windows: postgresql | Cloud: postgresql
+
+  # PostgreSQL配置 (Windows and Cloud)
+  host: "mt4-factory.xxxxx.us-east-1.rds.amazonaws.com"  # Mac: N/A | Windows: postgres | Cloud: RDS地址
+  port: 5432                            # Mac: N/A | Windows: 5432 | Cloud: 5432
+  database: "evo_trade"                 # Mac: N/A | Windows: evo_trade | Cloud: evo_trade
+  user: "evo_trade_user"                # Mac: N/A | Windows: evo_trade_user | Cloud: evo_trade_user
+  password: "${POSTGRES_PASSWORD}"      # Mac: N/A | Windows: evo_trade_pass_dev_2024 | Cloud: ${POSTGRES_PASSWORD}
+
+  # SQLite配置 (Mac only)
+  sqlite_path: "./data/evo_trade.db"    # Mac: ./data/evo_trade.db | Windows: N/A | Cloud: N/A
+
+  # 连接池配置
+  pool_size: 50                         # Mac: 5 | Windows: 50 | Cloud: 50
+  max_overflow: 50                      # Mac: 10 | Windows: 50 | Cloud: 50
+  pool_pre_ping: true                   # All: true
+  echo: false                           # All: false
+
+# ==================== MT5主机配置 ====================
+# 统一管理所有MT5主机（Demo和Real）
+mt5_hosts:
+  # MT5主机1
+  demo_1:
+    enabled: true
+    name: "MT5 Worker 1"
+    type: "demo"
+    host: "52.10.20.30"                 # 修改为实际MT5地址
+    port: 9090
+    login: 5049130509                   # 修改为实际账号
+    password: "${MT5_DEMO_PASSWORD}"    # 修改为实际密码
+    server: "MetaQuotes-Demo"           # 修改为实际服务器
+    api_key: "${MT5_DEMO_API_KEY}"
+    timeout: 15
+    use_investor: true
+
+  # MT5主机2
+  real_1:
+    enabled: true
+    name: "MT5 Worker 2"
+    type: "real"
+    host: "52.10.20.40"                 # 修改为实际MT5地址
+    port: 9091
+    login: 8012345678                   # 修改为实际账号
+    password: "${MT5_REAL_PASSWORD}"    # 修改为实际密码
+    server: "ICMarkets-Live"            # 修改为实际服务器
+    api_key: "${MT5_REAL_API_KEY}"
+    timeout: 20
+    use_investor: false
+
+# ==================== Validator配置 ====================
+validator:
+  enabled: true
+  mode: "active_strategies"
+
+  # 数据源配置（按权重自动选择可用数据源）
+  data_sources:
+    - type: "database"                  # 历史数据库（优先）
+      weight: 0.6
+      enabled: true
+
+    - type: "realtime"                  # 实时MT5数据
+      weight: 0.2
+      enabled: true
+      mt5_host: "demo_1"                # 使用demo_1获取实时数据
+
+    - type: "mock"                      # Mock数据（兜底）
+      weight: 0.2
+      enabled: true
+
+  # 并发配置
+  concurrency: 50                       # Mac: N/A | Windows: 20 | Cloud: 50
+  schedule_interval: 3600               # All: 3600 (1小时)
+
+  # 账户配置
+  initial_balance: 100                  # All: 100 (USD)
+
+  # 数据获取配置
+  bars_count: 500                       # All: 500 (实时模式K线数量)
+  bars_count_db: 3000                   # All: 3000 (数据库模式K线数量)
+
+# ==================== 历史数据配置 ====================
+historical_data:
+  enabled: true                         # Mac: false | Windows: true | Cloud: true
+  phase: 3                              # Mac: N/A | Windows: 1 | Cloud: 3
+
+  # 自动更新配置
+  auto_update:
+    enabled: true                       # Mac: false | Windows: false | Cloud: true
+    schedule: "0 2 * * *"               # All: 0 2 * * * (凌晨2点)
+    update_days: 1                      # All: 1 (更新最近N天)
+
+  # 数据库优化
+  optimization:
+    use_partitioning: true              # Mac: false | Windows: false | Cloud: true
+    partition_by: "year"                # All: year
+
+# ==================== Execution配置 ====================
+execution:
+  enabled: true
+
+  # MT5主机选择（引用mt5_hosts的key）
+  mt5_host: "real_1"                    # 可选: demo_1, real_1（根据需要修改）
+
+  # 风控限制
+  risk_limits:
+    max_order_size: 0.1                 # Mac: N/A | Windows: 1.0 | Cloud: 0.1
+    max_daily_loss: 1000                # Mac: N/A | Windows: 10000 | Cloud: 1000
+    max_position_count: 5               # Mac: N/A | Windows: 10 | Cloud: 5
+    max_drawdown_percent: 15            # Mac: N/A | Windows: 20 | Cloud: 15
+
+    # 允许交易品种（白名单）
+    allowed_symbols:
+      - "EURUSD"
+      - "GBPUSD"
+      - "USDJPY"
+
+# ==================== Orchestrator配置 ====================
+orchestrator:
+  enabled: true                         # Mac: false | Windows: true | Cloud: true
+
+  # 策略激活阈值
+  activation:
+    min_recommendation_score: 65        # All: 65
+    min_total_return: 0.03              # All: 0.03
+    min_sharpe_ratio: 0.50              # All: 0.50
+    max_drawdown: 0.12                  # All: 0.12
+    min_win_rate: 0.35                  # All: 0.35
+    min_profit_factor: 1.5              # All: 1.5
+    min_stability_score: 0.45           # All: 0.45
+
+# ==================== 策略生成配置 ====================
+strategy_generation:
+  enabled: true                         # Mac: false | Windows: true | Cloud: true
+
+  # LLM配置
+  llm:
+    provider: "anthropic"               # Mac: openai | Windows: openai | Cloud: anthropic
+    model: "claude-3-sonnet-20240229"   # Mac: gpt-4 | Windows: gpt-4 | Cloud: claude-3-sonnet-20240229
+    api_key: "${ANTHROPIC_API_KEY}"     # Mac: ${OPENAI_API_KEY} | Windows: ${OPENAI_API_KEY} | Cloud: ${ANTHROPIC_API_KEY}
+    temperature: 0.7                    # All: 0.7
+
+  # 生成参数
+  generation:
+    max_strategies_per_request: 10      # All: 10
+    code_validation: true               # All: true
+

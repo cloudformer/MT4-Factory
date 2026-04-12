@@ -1,5 +1,6 @@
 """配置管理"""
 import yaml
+import os
 from pathlib import Path
 from typing import Dict, Any
 
@@ -7,8 +8,9 @@ from typing import Dict, Any
 class Settings:
     """全局配置管理"""
 
-    def __init__(self, env: str = "development"):
-        self.env = env
+    def __init__(self, env: str = None):
+        # 优先从环境变量DEVICE读取，如果没有则使用传入参数，最后默认windows
+        self.env = env or os.getenv('DEVICE', 'windows')
         self._config = self._load_config()
 
     def _load_config(self) -> Dict[str, Any]:
