@@ -1,72 +1,21 @@
-Traceback (most recent call last):
-  File "<frozen runpy>", line 198, in _run_module_as_main
-  File "<frozen runpy>", line 88, in _run_code
-  File "/Users/frankzhang/repo-private/MT4-Factory/venv/lib/python3.13/site-packages/uvicorn/__main__.py", line 4, in <module>
-    uvicorn.main()
-    ~~~~~~~~~~~~^^
-  File "/Users/frankzhang/repo-private/MT4-Factory/venv/lib/python3.13/site-packages/click/core.py", line 1485, in __call__
-    return self.main(*args, **kwargs)
-           ~~~~~~~~~^^^^^^^^^^^^^^^^^
-  File "/Users/frankzhang/repo-private/MT4-Factory/venv/lib/python3.13/site-packages/click/core.py", line 1406, in main
-    rv = self.invoke(ctx)
-  File "/Users/frankzhang/repo-private/MT4-Factory/venv/lib/python3.13/site-packages/click/core.py", line 1269, in invoke
-    return ctx.invoke(self.callback, **ctx.params)
-           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/frankzhang/repo-private/MT4-Factory/venv/lib/python3.13/site-packages/click/core.py", line 824, in invoke
-    return callback(*args, **kwargs)
-  File "/Users/frankzhang/repo-private/MT4-Factory/venv/lib/python3.13/site-packages/uvicorn/main.py", line 433, in main
-    run(
-    ~~~^
-        app,
-        ^^^^
-    ...<47 lines>...
-        h11_max_incomplete_event_size=h11_max_incomplete_event_size,
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    )
-    ^
-  File "/Users/frankzhang/repo-private/MT4-Factory/venv/lib/python3.13/site-packages/uvicorn/main.py", line 606, in run
-    server.run()
-    ~~~~~~~~~~^^
-  File "/Users/frankzhang/repo-private/MT4-Factory/venv/lib/python3.13/site-packages/uvicorn/server.py", line 75, in run
-    return asyncio_run(self.serve(sockets=sockets), loop_factory=self.config.get_loop_factory())
-  File "/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/runners.py", line 195, in run
-    return runner.run(main)
-           ~~~~~~~~~~^^^^^^
-  File "/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/runners.py", line 118, in run
-    return self._loop.run_until_complete(task)
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
-  File "/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/asyncio/base_events.py", line 725, in run_until_complete
-    return future.result()
-           ~~~~~~~~~~~~~^^
-  File "/Users/frankzhang/repo-private/MT4-Factory/venv/lib/python3.13/site-packages/uvicorn/server.py", line 79, in serve
-    await self._serve(sockets)
-  File "/Users/frankzhang/repo-private/MT4-Factory/venv/lib/python3.13/site-packages/uvicorn/server.py", line 86, in _serve
-    config.load()
-    ~~~~~~~~~~~^^
-  File "/Users/frankzhang/repo-private/MT4-Factory/venv/lib/python3.13/site-packages/uvicorn/config.py", line 441, in load
-    self.loaded_app = import_from_string(self.app)
-                      ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
-  File "/Users/frankzhang/repo-private/MT4-Factory/venv/lib/python3.13/site-packages/uvicorn/importer.py", line 22, in import_from_string
-    raise exc from None
-  File "/Users/frankzhang/repo-private/MT4-Factory/venv/lib/python3.13/site-packages/uvicorn/importer.py", line 19, in import_from_string
-    module = importlib.import_module(module_str)
-  File "/opt/homebrew/Cellar/python@3.13/3.13.7/Frameworks/Python.framework/Versions/3.13/lib/python3.13/importlib/__init__.py", line 88, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
-  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
-  File "<frozen importlib._bootstrap_external>", line 1026, in exec_module
-  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
-  File "/Users/frankzhang/repo-private/MT4-Factory/src/services/orchestrator/api/app.py", line 5, in <module>
-    from .routes import signal, registration, account, portfolio, risk, evaluation, accounts_db, platform
-  File "/Users/frankzhang/repo-private/MT4-Factory/src/services/orchestrator/api/routes/signal.py", line 8, in <module>
-    from ...service.orchestrator import SignalOrchestrator
-  File "/Users/frankzhang/repo-private/MT4-Factory/src/services/orchestrator/service/orchestrator.py", line 5, in <module>
-    from src.common.mt5 import mt5_manager
-  File "/Users/frankzhang/repo-private/MT4-Factory/src/common/mt5/__init__.py", line 7, in <module>
-    from .unified_client import UnifiedMT5Client
-  File "/Users/frankzhang/repo-private/MT4-Factory/src/common/mt5/unified_client.py", line 15, in <module>
-    from src.common.logger import get_logger
-ModuleNotFoundError: No module named 'src.common.logger'
+INFO:     Will watch for changes in these directories: ['/Users/frankzhang/repo-private/MT4-Factory']
+INFO:     Uvicorn running on http://0.0.0.0:8002 (Press CTRL+C to quit)
+INFO:     Started reloader process [29939] using StatReload
+INFO:     Started server process [29944]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+🔌 使用Mock MT5客户端 (Darwin - 开发模式)
+INFO:     127.0.0.1:61599 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63503 - "GET /status HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:63532 - "GET /status HTTP/1.1" 404 Not Found
+WARNING:  StatReload detected changes in 'src/common/config/settings.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [29944]
+INFO:     Started server process [30728]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+🔌 使用Mock MT5客户端 (Darwin - 开发模式)
+INFO:     127.0.0.1:51239 - "GET /status HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:51268 - "GET /status HTTP/1.1" 404 Not Found

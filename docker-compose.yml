@@ -6,9 +6,9 @@ services:
     image: postgres:16-alpine
     container_name: mt4-factory-postgres
     environment:
-      POSTGRES_DB: evo_trade
-      POSTGRES_USER: evo_trade_user
-      POSTGRES_PASSWORD: evo_trade_pass_dev_2024
+      POSTGRES_DB: mt4factory
+      POSTGRES_USER: mt4factory
+      POSTGRES_PASSWORD: mt4factory_dev_2024
       POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
     ports:
       - "5432:5432"
@@ -16,7 +16,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U evo_trade_user -d evo_trade"]
+      test: ["CMD-SHELL", "pg_isready -U mt4factory -d mt4factory"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -63,7 +63,7 @@ database:
   password: ""                          # Mac: N/A | Windows: evo_trade_pass_dev_2024 | Cloud: ${POSTGRES_PASSWORD}
 
   # SQLite配置 (Mac only)
-  sqlite_path: "./data/evo_trade.db"    # Mac: ./data/evo_trade.db | Windows: N/A | Cloud: N/A
+  sqlite_path: "./data/mt4_factory.db"  # Mac: ./data/mt4_factory.db | Windows: N/A | Cloud: N/A
 
   # 连接池配置
   pool_size: 5                          # Mac: 5 | Windows: 50 | Cloud: 50

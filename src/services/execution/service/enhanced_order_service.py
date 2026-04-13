@@ -9,11 +9,11 @@ from src.common.models.trade import Trade
 from src.common.models.account import Account
 from src.common.utils.id_generator import generate_trade_id
 from src.common.mt5 import mt5_manager, OrderRequest
-from src.common.logger import get_logger
+import logging
 from ..repository.trade_repo import TradeRepository
 from .risk_manager import RiskManager, RiskCheckResult
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class OrderExecutionError(Exception):

@@ -9,8 +9,8 @@ class Settings:
     """全局配置管理"""
 
     def __init__(self, env: str = None):
-        # 优先从环境变量DEVICE读取，如果没有则使用传入参数，最后默认windows
-        self.env = env or os.getenv('DEVICE', 'windows')
+        # 优先从环境变量读取（支持ENV和DEVICE），如果没有则使用传入参数，最后默认windows
+        self.env = env or os.getenv('ENV') or os.getenv('DEVICE', 'windows')
         self._config = self._load_config()
 
     def _load_config(self) -> Dict[str, Any]:

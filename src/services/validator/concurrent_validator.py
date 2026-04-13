@@ -10,13 +10,13 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from src.common.config import settings
-from src.common.logger import get_logger
+import logging
 from src.common.mt5 import UnifiedMT5Client
 from src.common.models.strategy import Strategy
 from src.services.strategy.service.backtester import SimpleBacktester
 from .data_sources import MultiDataSource
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 # FastAPI应用（提供HTTP API）
 app = FastAPI(title="Validator Service", version="1.0.0")

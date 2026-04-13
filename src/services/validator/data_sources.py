@@ -7,9 +7,9 @@ import random
 from src.common.config.settings import settings
 from src.common.models.historical_bar import HistoricalBar
 from src.common.database.connection import db
-from src.common.logger import get_logger
+import logging
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class DataSource(ABC):
