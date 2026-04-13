@@ -2,7 +2,7 @@
 # Strategy专用依赖
 # ============================================================
 
--r requirements/base.txt
+-r base.txt
 
 # Data Processing (evaluator需要)
 pandas==2.2.0
