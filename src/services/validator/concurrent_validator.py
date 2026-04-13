@@ -132,7 +132,7 @@ class ConcurrentValidator:
         await self.validate_all_strategies()
 
         # 定时任务：根据配置执行
-        schedule_interval = settings.validator.get("schedule_interval", 3600)
+        schedule_interval = settings.get("validator", {}).get("schedule_interval", 3600)
 
         self.scheduler.add_job(
             self.validate_all_strategies,
@@ -330,7 +330,7 @@ class ConcurrentValidator:
         """
         try:
             # 使用现有的SimpleBacktester
-            initial_balance = settings.validator.get("initial_balance", 100)
+            initial_balance = settings.get("validator", {}).get("initial_balance", 100)
             backtester = SimpleBacktester(initial_balance=initial_balance)
 
             # 运行回测
@@ -543,7 +543,7 @@ async def start_validator_service():
     """启动Validator后台服务"""
     global validator_instance
 
-    concurrency = settings.validator.get("concurrency", 20)
+    concurrency = settings.get("validator", {}).get("concurrency", 20)
     logger.info(f"Validator配置: 并发数={concurrency}")
 
     validator_instance = ConcurrentValidator(concurrency=concurrency)

@@ -7,3 +7,10 @@
 
 # Plans directory (generated terraform plans)
 /plans/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
