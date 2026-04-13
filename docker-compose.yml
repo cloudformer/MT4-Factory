@@ -38,7 +38,6 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./src:/app/src                # 源代码（开发环境：实时加载）
       - ./logs:/app/logs              # 日志目录
       - ./config:/app/config:ro       # 配置目录（只读）
     restart: unless-stopped
@@ -64,7 +63,6 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./src:/app/src                # 源代码（开发环境：实时加载）
       - ./logs:/app/logs              # 日志目录
       - ./config:/app/config:ro       # 配置目录（只读）
     restart: unless-stopped
@@ -92,7 +90,6 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./src:/app/src                # 源代码（开发环境：实时加载）
       - ./logs:/app/logs              # 日志目录
       - ./config:/app/config:ro       # 配置目录（只读）
     restart: unless-stopped
@@ -118,7 +115,6 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./src:/app/src                # 源代码（开发环境：实时加载）
       - ./logs:/app/logs              # 日志目录
       - ./config:/app/config:ro       # 配置目录（只读）
     restart: unless-stopped
@@ -151,7 +147,6 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./src:/app/src                # 源代码（开发环境：实时加载）
       - ./logs:/app/logs              # 日志目录
       - ./config:/app/config:ro       # 配置目录（只读）
     restart: unless-stopped
