@@ -2,9 +2,8 @@
 # Strategy专用依赖
 # ============================================================
 
--r base.txt
+-r requirements/base.txt
 
-# Data Processing & Backtesting
+# Data Processing (evaluator需要)
 pandas==2.2.0
 numpy==1.26.3
-backtrader==1.9.78.123

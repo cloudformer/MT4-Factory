@@ -3,26 +3,25 @@
 # ============================================================
 #
 # 用途：Mac本地开发，运行所有服务
-# 包含：所有服务依赖 + 测试工具
-#
-# Docker容器不使用此文件，使用 requirements/<service>.txt
+# Docker容器使用 requirements/<service>.txt
 # ============================================================
 
-# 基础依赖（所有服务共用）
+# 基础依赖
 -r requirements/base.txt
 
-# 数据处理（Strategy + Validator需要）
+# 数据处理 (Strategy + Orchestrator)
 pandas==2.2.0
 numpy==1.26.3
-backtrader==1.9.78.123
 
-# 调度器（Validator需要）
+# 调度器 (Validator)
 apscheduler==3.10.4
 
-# 模板引擎（Dashboard需要）
+# 模板引擎 (Dashboard)
 jinja2==3.1.2
+
+# HTTP Client (Dashboard)
+httpx==0.26.0
 
 # 测试工具
 pytest==7.4.4
 pytest-asyncio==0.23.3
-httpx==0.26.0

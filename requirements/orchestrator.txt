@@ -2,7 +2,7 @@
 # Orchestrator专用依赖
 # ============================================================
 
--r base.txt
+-r requirements/base.txt
 
 # Data Processing (strategy_runner需要)
 pandas==2.2.0

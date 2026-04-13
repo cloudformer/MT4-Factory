@@ -2,7 +2,10 @@
 # Dashboard专用依赖
 # ============================================================
 
--r base.txt
+-r requirements/base.txt
 
 # Template Engine
 jinja2==3.1.2
+
+# HTTP Client (调用其他服务)
+httpx==0.26.0

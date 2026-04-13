@@ -2,4 +2,4 @@
 # Execution专用依赖
 # ============================================================
 
--r base.txt
+-r requirements/base.txt
