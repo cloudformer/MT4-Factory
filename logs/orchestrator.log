@@ -19,3 +19,71 @@ INFO:     Application startup complete.
 🔌 使用Mock MT5客户端 (Darwin - 开发模式)
 INFO:     127.0.0.1:51239 - "GET /status HTTP/1.1" 404 Not Found
 INFO:     127.0.0.1:51268 - "GET /status HTTP/1.1" 404 Not Found
+WARNING:  StatReload detected changes in 'scripts/tools/update_historical_data.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [30728]
+INFO:     Started server process [32450]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+🔌 使用Mock MT5客户端 (Darwin - 开发模式)
+INFO:     127.0.0.1:64353 - "GET /status HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:64355 - "GET /status HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:64657 - "GET /status HTTP/1.1" 404 Not Found
+WARNING:  StatReload detected changes in 'src/services/strategy/evaluator/base_evaluator.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [32450]
+INFO:     Started server process [33206]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'src/services/strategy/evaluator/base_evaluator.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [33206]
+INFO:     Started server process [33220]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'src/services/strategy/evaluator/base_evaluator.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [33220]
+INFO:     Started server process [33231]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'src/services/strategy/evaluator/base_evaluator.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [33231]
+INFO:     Started server process [33243]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'src/services/strategy/evaluator/base_evaluator.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [33243]
+INFO:     Started server process [33261]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'src/services/strategy/evaluator/base_evaluator.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [33261]
+INFO:     Started server process [33277]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'src/services/strategy/evaluator/synthetic_evaluator.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [33277]
+INFO:     Started server process [33297]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.

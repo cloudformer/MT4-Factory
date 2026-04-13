@@ -27,8 +27,8 @@ class SyntheticDataEvaluator(BaseEvaluator):
         # 1. 生成模拟数据
         historical_data = self._generate_synthetic_data(symbol, bars)
 
-        # 2. 运行回测
-        metrics = self.run_backtest(strategy_code, historical_data)
+        # 2. 运行回测（传递symbol）
+        metrics = self.run_backtest(strategy_code, historical_data, symbol=symbol)
 
         # 3. 标记数据来源
         metrics['data_source'] = 'synthetic'

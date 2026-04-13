@@ -1,5 +1,6 @@
 """基础评估器 - 包含所有指标计算逻辑"""
 from typing import Dict, List, Tuple
+from datetime import datetime
 import pandas as pd
 import numpy as np
 
@@ -13,13 +14,14 @@ class BaseEvaluator:
         self.trades: List[Dict] = []
         self.equity_curve: List[float] = []
 
-    def run_backtest(self, strategy_code: str, data: pd.DataFrame) -> Dict:
+    def run_backtest(self, strategy_code: str, data: pd.DataFrame, symbol: str = "EURUSD") -> Dict:
         """
         运行回测
 
         Args:
             strategy_code: 策略代码
             data: 历史K线数据 (包含 open, high, low, close, volume)
+            symbol: 交易品种（用于记录）
 
         Returns:
             性能指标字典
@@ -83,8 +85,8 @@ class BaseEvaluator:
         if current_position:
             self._close_position(current_position, data.iloc[-1], len(data) - 1)
 
-        # 5. 计算性能指标
-        return self.calculate_metrics()
+        # 5. 计算性能指标（传递symbol和volume）
+        return self.calculate_metrics(symbol=symbol, volume=0.1)
 
     def _load_strategy(self, strategy_code: str):
         """动态加载策略"""
@@ -130,10 +132,16 @@ class BaseEvaluator:
             'balance': self.balance
         })
 
-    def calculate_metrics(self) -> Dict:
-        """计算完整的性能指标"""
+    def calculate_metrics(self, symbol: str = "EURUSD", volume: float = 0.1) -> Dict:
+        """
+        计算完整的性能指标
+
+        Args:
+            symbol: 交易品种（用于记录）
+            volume: 固定手数（用于记录）
+        """
         if not self.trades:
-            return self._get_empty_metrics()
+            return self._get_empty_metrics(symbol, volume)
 
         # === 基础指标 ===
         total_return = (self.balance - self.initial_balance) / self.initial_balance
@@ -223,6 +231,17 @@ class BaseEvaluator:
         )
 
         return {
+            # === 评估参数（重要：记录评分基于的参数）===
+            'evaluation_params': {
+                'initial_balance': self.initial_balance,
+                'backtest_bars': len(self.equity_curve),
+                'symbol': symbol,
+                'volume': volume,
+                'contract_size': 100000,  # 标准手
+                'warm_up_bars': 50,  # 预热K线数
+                'evaluation_date': datetime.now().isoformat()
+            },
+
             # === 基础性能 ===
             'total_return': round(total_return, 4),
             'final_balance': round(self.balance, 2),
@@ -273,9 +292,18 @@ class BaseEvaluator:
             'backtest_bars': len(self.equity_curve)
         }
 
-    def _get_empty_metrics(self) -> Dict:
+    def _get_empty_metrics(self, symbol: str = "EURUSD", volume: float = 0.1) -> Dict:
         """无交易时的默认指标"""
         return {
+            'evaluation_params': {
+                'initial_balance': self.initial_balance,
+                'backtest_bars': 0,
+                'symbol': symbol,
+                'volume': volume,
+                'contract_size': 100000,
+                'warm_up_bars': 50,
+                'evaluation_date': datetime.now().isoformat()
+            },
             'total_return': 0.0, 'final_balance': self.initial_balance,
             'total_trades': 0, 'sharpe_ratio': 0.0, 'sortino_ratio': 0.0,
             'calmar_ratio': 0.0, 'profit_factor': 0.0, 'win_rate': 0.0,

@@ -4,7 +4,6 @@
 
 # Jira payload (generated, not committed)
 /jira/*.json
-/scripts/
 
 # Plans directory (generated terraform plans)
 /plans/
