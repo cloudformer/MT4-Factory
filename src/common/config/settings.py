@@ -43,6 +43,11 @@ class Settings:
         """日志配置"""
         return self._config.get('logging', {})
 
+    @property
+    def validator(self) -> Dict[str, Any]:
+        """Validator配置"""
+        return self._config.get('validator', {})
+
     def get(self, key: str, default=None):
         """获取配置项"""
         return self._config.get(key, default)

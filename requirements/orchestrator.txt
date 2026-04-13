@@ -7,3 +7,6 @@
 # Data Processing (strategy_runner需要)
 pandas==2.2.0
 numpy==1.26.3
+
+# Form data (FastAPI需要)
+python-multipart==0.0.6
