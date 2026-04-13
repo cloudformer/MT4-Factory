@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-from src.common.config import settings
+from src.common.config.settings import settings
 import logging
 from src.common.mt5 import UnifiedMT5Client
 from src.common.models.strategy import Strategy

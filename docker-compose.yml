@@ -109,12 +109,14 @@ services:
     environment:
       - ENV=${ENV:-windows}
       - CONFIG_PATH=config/${ENV:-windows}.yaml
+      - PYTHONDONTWRITEBYTECODE=1
     ports:
       - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
+      - ./src:/app/src                # 源代码（禁止.pyc后安全）
       - ./logs:/app/logs              # 日志目录
       - ./config:/app/config:ro       # 配置目录（只读）
     restart: unless-stopped
