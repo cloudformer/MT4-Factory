@@ -1,31 +1,28 @@
-# Web Framework
-fastapi==0.110.0
-uvicorn[standard]==0.27.0
-pydantic==2.6.0
-pydantic-settings==2.1.0
-jinja2==3.1.2
+# ============================================================
+# Mac本地开发环境 - 全栈依赖
+# ============================================================
+#
+# 用途：Mac本地开发，运行所有服务
+# 包含：所有服务依赖 + 测试工具
+#
+# Docker容器不使用此文件，使用 requirements/<service>.txt
+# ============================================================
 
-# Database
-SQLAlchemy==2.0.25
-psycopg2-binary==2.9.9  # PostgreSQL driver (Windows/Cloud)
-# SQLite支持内置在Python中，无需额外依赖
+# 基础依赖（所有服务共用）
+-r requirements/base.txt
 
-# Config & Utils
-pyyaml==6.0.1
-python-dotenv==1.0.0
-python-dateutil==2.9.0
-
-# Data Processing
+# 数据处理（Strategy + Validator需要）
 pandas==2.2.0
 numpy==1.26.3
+backtrader==1.9.78.123
 
-# Async
-aiohttp==3.9.3
+# 调度器（Validator需要）
+apscheduler==3.10.4
 
-# Testing
+# 模板引擎（Dashboard需要）
+jinja2==3.1.2
+
+# 测试工具
 pytest==7.4.4
 pytest-asyncio==0.23.3
 httpx==0.26.0
-
-# Backtesting
-backtrader==1.9.78.123
