@@ -154,7 +154,7 @@ class ConcurrentValidator:
             await self.shutdown()
 
     async def _test_mt5_connection(self):
-        """测试MT5连接"""
+        """测试MT5连接（失败不阻止服务启动）"""
         try:
             client = self._create_mt5_client()
             if client.initialize():
@@ -169,11 +169,9 @@ class ConcurrentValidator:
 
                 client.shutdown()
             else:
-                logger.error("❌ MT5连接失败")
-                raise RuntimeError("MT5连接失败")
+                logger.warning("⚠️  MT5连接失败，将使用其他数据源（database/mock）")
         except Exception as e:
-            logger.error(f"❌ MT5连接测试失败: {str(e)}")
-            raise
+            logger.warning(f"⚠️  MT5连接测试失败: {str(e)} | 将使用其他数据源")
 
     async def shutdown(self):
         """优雅关闭"""

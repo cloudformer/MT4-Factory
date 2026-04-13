@@ -63,9 +63,9 @@ database:
   # PostgreSQL配置 (Windows and Cloud)
   host: "postgres"                      # Mac: N/A | Windows: postgres | Cloud: RDS地址
   port: 5432                            # Mac: N/A | Windows: 5432 | Cloud: 5432
-  database: "evo_trade"                 # Mac: N/A | Windows: evo_trade | Cloud: evo_trade
-  user: "evo_trade_user"                # Mac: N/A | Windows: evo_trade_user | Cloud: evo_trade_user
-  password: "evo_trade_pass_dev_2024"   # Mac: N/A | Windows: evo_trade_pass_dev_2024 | Cloud: ${POSTGRES_PASSWORD}
+  database: "mt4factory"                # Mac: N/A | Windows: mt4factory | Cloud: mt4factory
+  user: "mt4factory"                    # Mac: N/A | Windows: mt4factory | Cloud: mt4factory
+  password: "mt4factory_dev_2024"       # Mac: N/A | Windows: mt4factory_dev_2024 | Cloud: ${POSTGRES_PASSWORD}
 
   # SQLite配置 (Mac only)
   sqlite_path: "./data/evo_trade.db"    # Mac: ./data/evo_trade.db | Windows: N/A | Cloud: N/A
