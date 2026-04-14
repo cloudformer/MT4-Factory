@@ -42,7 +42,7 @@ class Strategy(Base):
     name = Column(String(255), nullable=False)
     code = Column(Text, nullable=False)
     status = Column(
-        Enum(StrategyStatus),
+        Enum(StrategyStatus, values_callable=lambda obj: [e.value for e in obj]),
         default=StrategyStatus.CANDIDATE,
         nullable=False
     )
