@@ -30,10 +30,10 @@ class GenerateSignalRequest(BaseModel):
 class ExecuteSignalRequest(BaseModel):
     signal_id: str
 
-# 其他服务地址
-STRATEGY_URL = "http://localhost:8000"
-ORCHESTRATOR_URL = "http://localhost:8002"
-EXECUTION_URL = "http://localhost:8003"
+# 其他服务地址（从配置读取）
+STRATEGY_URL = settings.services.get("strategy", {}).get("url", "http://strategy:8000")
+ORCHESTRATOR_URL = settings.services.get("orchestrator", {}).get("url", "http://orchestrator:8002")
+EXECUTION_URL = settings.services.get("execution", {}).get("url", "http://execution:8003")
 
 
 def get_db_session():
